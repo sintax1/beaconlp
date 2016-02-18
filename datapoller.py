@@ -37,7 +37,6 @@ class DataPoller(object):
 
         self.logger("Checking for new Beacon filters")
 
-
         try:
             new_beacon_filters = api.get_beacon_filters()['result']
             self.beacon_filters.beacon_update(new_beacon_filters)

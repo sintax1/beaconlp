@@ -41,8 +41,8 @@ def test_beacon_data_mapping(message_test_data, beacon_data_mapping_json):
             packet['beacon_field'] = message_test_data[beacon_field]
             field_max_size = eval((
                 '{packet_protocol}().get_field(\'{packet_field}\')'
-                '.i2len(\'{beacon_field}\', \'{beacon_field}\')').format(
-                    **packet))
+                '.i2len(\'{beacon_field}\', \'{beacon_field}\')')
+                .format(**packet))
 
             data_size = get_byte_size(message_test_data[beacon_field])
 

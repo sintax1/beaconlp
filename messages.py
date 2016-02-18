@@ -208,6 +208,7 @@ class Beacon(Message):
             buff += struct.pack('!%ss' % self.data_length, self.data)
         return buff
 
+
 class Task(Message):
     """Task message type"""
 

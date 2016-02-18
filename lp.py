@@ -78,7 +78,8 @@ class LP(Daemon):
 
                 data_map_list = self.filters[registered_filter]
 
-                beacon = self.extract_beacon_from_packet(packet[0], data_map_list)
+                beacon = self.extract_beacon_from_packet(
+                    packet[0], data_map_list)
 
                 print beacon
 
