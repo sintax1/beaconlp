@@ -1,0 +1,112 @@
+{% import 'appbuilder/general/lib.html' as lib %}
+
+<div class="beacon-fields-wrapper select2-container form-control" id="s2id_beaconfields" style="display:inline">
+    <button class="btn add-field-button">Add More Fields</button>
+
+    {% for selected_packet_field, selected_beacon_field in data_mapping %}
+
+        <div id="beacon-fields-options">
+            <select class="my_select2" data-placeholder="Select Value" id="beaconfield" name="beaconfields[{{loop.index}}]" style="width:250px">
+
+                <option>----</option>
+                {% for packet_field in packet_fields %}
+                    <option value="{{packet_field}}"{% if packet_field == selected_packet_field %} selected="selected"{% endif %}>{{packet_field}}</option>
+                {% endfor %}
+
+            </select>
+            -->
+            <select class="my_select2" data-placeholder="Select Value" id="messagefield" name="messagefields[{{loop.index}}]" style="width:250px">
+                <option>----</option>
+                {% for beacon_field in beacon_fields %}
+                    <option value="{{beacon_field}}"{% if beacon_field == selected_beacon_field %} selected="selected"{% endif %}>{{beacon_field}}</option>
+                {% endfor %}
+            </select>
+            
+            {% if loop.index > 1 %}
+                <a href="#" class="remove_field">Remove</a>
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+<script>
+
+    $(document).ready(function() { 
+
+        // Form Submit
+        $('#model_form').submit(function(event) { 
+
+            var beaconfields = $('select[name^="beaconfields"]').map(function(){return $(this).val();}).get();
+            var messagefields = $('select[name^="messagefields"]').map(function(){return $(this).val();}).get();
+
+            if ( ( beaconfields.indexOf('----') == -1 ) && ( messagefields.indexOf('----') == -1 ) ) { 
+                // Not the default value selected
+
+                fieldLength = beaconfields.length;
+
+                beacon_data_mapping = [];
+
+                for (var i=0; i < fieldLength; i++) {
+                    beacon_data_mapping.push( [beaconfields[i], messagefields[i]] );
+                }
+          
+                // Submit Beacon Data Mappings
+                $('<input />').attr('type', 'hidden')
+                    .attr('name', "beacon_data_mapping")
+                    .attr('value', JSON.stringify(beacon_data_mapping, null, 2) )
+                    .appendTo('#model_form');
+            }
+
+            return true;
+        });
+
+        // Beacon data Field
+        var wrapper         = $(".beacon-fields-wrapper");
+        var add_button      = $(".add-field-button"); 
+        
+        $(add_button).click(function(e){
+            e.preventDefault();
+
+            if ( wrapper.children().length >= $( "#messagefield" ).children().length) {
+                // Can't have more data mapping selections than there are data fields
+                return;
+            }   
+
+            $( "#beacon-fields-options" )
+                .children( 'select' )
+                .select2('destroy')
+                .end()
+                .parent()
+                .append(
+                    $( '<div id="beacon-fields-options"></div>').append(
+                        $( "#beacon-fields-options" )
+                            .children().eq(0)
+                            .clone()
+                    )
+                    .append( ' --> ' )
+                    .append(
+                        $( "#beacon-fields-options" )
+                            .children().eq(1)
+                            .clone()
+                    )
+                    .append( ' <a href="#" class="remove_field">Remove</a>' )
+                )
+                .end()
+                .children( 'select' ).select2()
+                .end()
+
+            $( wrapper ).children().last().children( 'select' ).select2();
+
+        });
+    
+        $(wrapper).on("click",".remove_field", function(e){
+            e.preventDefault(); $(this).parent('div').remove();
+        })
+
+    });
+
+</script>
+

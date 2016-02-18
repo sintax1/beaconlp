@@ -1,0 +1,46 @@
+{% import 'appbuilder/general/lib.html' as lib %}
+
+{% block head_css %}
+    <link href="{{url_for('static',filename='css/query-builder.min.css')}}" rel="stylesheet">
+{% endblock %}
+
+{% block head_js %}
+    <script src="{{url_for('static',filename='js/jQuery.extendext.min.js')}}"></script>
+    <script src="{{url_for('static',filename='js/doT.min.js')}}"></script>
+    <script src="{{url_for('static',filename='js/query-builder.min.js')}}"></script>
+{% endblock %}
+
+<div class="input-group" id="querybuilder"></div>
+
+<script>
+
+    var beacon_filters = {{ beacon_filters|safe }};
+
+    $(document).ready(function() { 
+
+        // Initialize querybuilder with passed in data
+        $('#querybuilder').queryBuilder({
+            filters: beacon_filters,
+            {{ filter_rules|safe }}
+        });
+
+        // Form Submit
+        $('#model_form').submit(function(event) { 
+
+            var beacon_filter = $('#querybuilder').queryBuilder('getRules');
+
+            // Submit Beacon Filters 
+            if (!$.isEmptyObject( beacon_filter )) {
+                $('<input />').attr('type', 'hidden')
+                    .attr('name', "beacon_filter")
+                    .attr('value', JSON.stringify(beacon_filter, null, 2) )
+                    .appendTo('#model_form');
+            }
+
+            return true;
+        });
+
+    });
+
+</script>
+
