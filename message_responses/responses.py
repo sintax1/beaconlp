@@ -3,7 +3,7 @@ from scapy.all import *
 
 def get_all_response_types():
     response_types = [r.response_name for r in BaseResponse.__subclasses__()]
-    return response_types
+    return zip(response_types, response_types)
 
 
 def get_response_by_name(name):
@@ -46,8 +46,8 @@ class BaseResponse(object):
             reply[packet_layer] = layer 
 
     def print_response(self, req):
-        response = self.create_response(req)
-        print "%s => %s" % (req, response)
+        response = self.create_response(req.copy())
+        print "%s => %s" % (req.summary(), response.summary())
 
 
 class GenericResponse(BaseResponse):

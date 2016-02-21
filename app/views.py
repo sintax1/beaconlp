@@ -173,10 +173,14 @@ class BeaconModelView(ModelView):
             description=(
                 'Extract message data based on the selected '
                 'mapping schema')),
+        'response_data_type': SelectField(
+            'Response Type', choices=get_all_response_types(),
+            description=(
+                'The protocol used for response messages to the implant'),
+            widget=Select2Widget()),
         'response_data_mapping': Field(
             'Response Data Mapping',
             widget=ResponseFieldsWidget(
-                response_types=get_all_response_types(),
                 packet_fields=get_all_packet_fields(),
                 response_fields=get_all_task_fields()),
             validators=[validators.Required(), BeaconDataMappingCheck()],
@@ -201,10 +205,14 @@ class BeaconModelView(ModelView):
             validators=[validators.Required(), BeaconDataMappingCheck()],
             description=(
                 'Extract message data based on the selected mapping schema')),
+        'response_data_type': SelectField(
+            'Response Type', choices=get_all_response_types(),
+            description=(
+                'The protocol used for response messages to the implant'),
+            widget=Select2Widget()),
         'response_data_mapping': Field(
             'Response Data Mapping',
             widget=ResponseFieldsWidget(
-                response_types=get_all_response_types(),
                 packet_fields=get_all_packet_fields(),
                 response_fields=get_all_task_fields()),
             validators=[validators.Required(), BeaconDataMappingCheck()],
@@ -213,19 +221,19 @@ class BeaconModelView(ModelView):
     }
     edit_columns = [
         'name', 'beacon_filter', 'beacon_data_mapping',
-        'response_data_mapping']
+        'response_data_type', 'response_data_mapping']
     add_columns = [
         'name', 'beacon_filter', 'beacon_data_mapping',
-        'response_data_mapping']
+        'response_data_type', 'response_data_mapping']
     list_columns = [
         'name', 'beacon_filter', 'beacon_data_mapping',
-        'response_data_mapping']
+        'response_data_type', 'response_data_mapping']
 
     show_fieldsets = [
         ('Filter', {'fields': ['name', 'beacon_filter']}),
         ('Beacon Data Mapping', {'fields': ['beacon_data_mapping']}),
         ('Task Data Mapping', {
-            'fields': ['response_data_mapping']})]
+            'fields': ['response_data_type', 'response_data_mapping']})]
 
     description_columns = {
         'name': 'Simple name for easy reference'

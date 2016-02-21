@@ -51,7 +51,6 @@ if __name__ == "__main__":
 
     while True:
 
-        """
         beacon = beacon_ping
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde01'
         send_icmp_beacon(dst=dest_ip, beacon=beacon)
@@ -73,7 +72,6 @@ if __name__ == "__main__":
         send_udp_beacon(dst=dest_ip, beacon=beacon)
         time.sleep(5)
 
-        """
         beacon = beacon_ping
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde05'
         send_tcp_beacon(dst=dest_ip, beacon=beacon)

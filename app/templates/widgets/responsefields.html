@@ -1,15 +1,5 @@
 {% import 'appbuilder/general/lib.html' as lib %}
 
-<div id="response-type-wrapper">
-    <select class="my_select2" data-placeholder="Select Value" id="responsetypefield" name="responsetypefield" style="width:500px">
-        {% for response_type in response_types %}
-            <option value="{{response_type}}"{% if response_type == selected_response_type %} selected="selected"{% endif %}>{{response_type}}</option>
-        {% endfor %}
-    </select>
-</div>
-
-<br />
-
 <div class="packet-fields-wrapper select2-container form-control" id="s2id_responsepacketfields" style="display:inline">
 
     {% for selected_packet_field, selected_response_field in data_mapping %}
@@ -58,12 +48,6 @@
                     response_data_mapping.push( [responsepacketfields[i], responsefields[i]] );
                 }
          
-                // Submit response type
-                $('<input />').attr('type', 'hidden')
-                    .attr('name', "response_data_type")
-                    .attr('value', $('#responsetypefield').val())
-                    .appendTo('#model_form');
-
                 // Submit response Data Mappings
                 $('<input />').attr('type', 'hidden')
                     .attr('name', "response_data_mapping")

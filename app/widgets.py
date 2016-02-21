@@ -86,7 +86,6 @@ class ResponseFieldsWidget(object):
     """
     template = '/widgets/responsefields.html'
     template_args = None
-    response_types = []
     packet_fields = []
     response_fields = []
     data_mapping = (
@@ -96,8 +95,6 @@ class ResponseFieldsWidget(object):
     )
 
     def __init__(self, **kwargs):
-        if 'response_types' not in kwargs:
-            kwargs['response_types'] = self.response_types
         if 'response_fields' not in kwargs:
             kwargs['response_fields'] = self.response_fields
         if 'packet_fields' not in kwargs:
