@@ -1,5 +1,6 @@
 import requests
 import time
+import json
 
 CONTROLLER_API_URL = 'http://172.16.201.245:8080'
 
@@ -41,4 +42,11 @@ def get_implants():
 
 
 def send_beacon(beacon):
-    return _post(_url('/process', model_name='beacon'), data=beacon.toJson())
+    return _post(_url('/postbeacon', model_name='beacon'), data=beacon.toJson())
+
+def send_log(message, message_type="Info"):
+    data = {
+        'message_type': message_type,
+        'message': message
+    }
+    return _post(_url('/postlog', model_name='log'), data=json.dumps(data))

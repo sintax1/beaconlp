@@ -19,7 +19,7 @@ def send_icmp_beacon(dst=None, beacon=None):
 def send_udp_beacon(dst=None, beacon=None):
     print "Sending UDP:", beacon.toJson()
     print beacon.pack().encode('hex')
-    packet = IP(dst=dst)/UDP(dport=53)/beacon.pack()
+    packet = IP(dst=dst)/UDP(dport=53)/DNS()/beacon.pack()
     send(packet)
 
 
@@ -51,6 +51,7 @@ if __name__ == "__main__":
 
     while True:
 
+        """
         beacon = beacon_ping
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde01'
         send_icmp_beacon(dst=dest_ip, beacon=beacon)
@@ -61,6 +62,7 @@ if __name__ == "__main__":
         send_icmp_beacon(dst=dest_ip, beacon=beacon)
         time.sleep(5)
 
+        """
         beacon = beacon_ping
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde03'
         send_udp_beacon(dst=dest_ip, beacon=beacon)
@@ -71,6 +73,7 @@ if __name__ == "__main__":
         send_udp_beacon(dst=dest_ip, beacon=beacon)
         time.sleep(5)
 
+        """
         beacon = beacon_ping
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde05'
         send_tcp_beacon(dst=dest_ip, beacon=beacon)
@@ -80,3 +83,4 @@ if __name__ == "__main__":
         beacon.uuid = 'b9dbdeb0-85de-49b7-b9a3-6f6f02dcde06'
         send_tcp_beacon(dst=dest_ip, beacon=beacon)
         time.sleep(5)
+        """

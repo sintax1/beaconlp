@@ -5,7 +5,8 @@ from flask.ext.appbuilder import ModelView
 from flask.ext.appbuilder.baseviews import expose_api
 from flask.ext.appbuilder.actions import action
 from app import appbuilder, db
-from app.widgets import (FilterBuilderWidget, BeaconFieldsWidget)
+from app.widgets import (
+    FilterBuilderWidget, BeaconFieldsWidget, ResponseFieldsWidget)
 from wtforms import (
     SelectField, Field, validators)
 from flask_appbuilder.fieldwidgets import (
@@ -16,13 +17,17 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from filters import (
     get_querybuilder_filters_json, get_all_packet_fields)
 from messages import (
-    get_all_beacon_fields_json, get_all_beacon_fields, json_to_beacon)
-from flask_appbuilder.security.decorators import has_access_api
+    get_all_beacon_fields_json, get_all_beacon_fields, 
+    json_to_beacon, get_all_task_fields)
+from message_responses.responses import get_all_response_types
+from flask_appbuilder.security.decorators import (
+    has_access_api, permission_name)
 
 from datetime import datetime
 from utils import is_ascii
 
 from validators import BeaconDataMappingCheck
+import json
 
 
 def get_assigned_tasks():
@@ -38,24 +43,22 @@ class TaskModelView(ModelView):
             description=(
                 'The type of task so the implant knows how to '
                 'handle the Command or Data'),
-            widget=Select2Widget())}
-
+            widget=Select2Widget())
+    }
     edit_form_extra_fields = {
         'type': SelectField(
             'Type', choices=TASK_TYPES,
             description=(
                 'The type of task so the implant knows how to '
                 'handle the Command or Data'),
-            widget=Select2Widget())}
-
+            widget=Select2Widget())
+    }
     label_columns = {'implant': 'Implant'}
     list_columns = ['id', 'task_type', 'command', 'data']
-
     show_fieldsets = [
         ('Summary', {'fields': ['task_type']}),
         ('Details', {'fields': ['command', 'data']}),
     ]
-
     add_columns = ['type', 'command', 'data']
     description_columns = {
         'command': (
@@ -69,6 +72,7 @@ class TaskModelView(ModelView):
 
 class ImplantModelView(ModelView):
     datamodel = SQLAInterface(Implant)
+    base_order = ('last_beacon_received','desc')
 
     edit_form_extra_fields = {
         'assigned_tasks': QuerySelectField(
@@ -105,6 +109,10 @@ class ImplantModelView(ModelView):
 class DataStoreModelView(ModelView):
     datamodel = SQLAInterface(DataStore)
     base_permissions = ['can_list', 'can_show']
+    base_order = ('timestamp','desc')
+
+    label_columns = {'data_type': 'Type'}
+    list_columns = ['timestamp', 'data_type', 'data']
 
     @action("muldelete", "Delete", "Delete all Really?", "fa-trash")
     def muldelete(self, items):
@@ -118,11 +126,32 @@ class DataStoreModelView(ModelView):
 
 class LogModelView(ModelView):
     datamodel = SQLAInterface(Log)
-    base_permissions = ['can_list', 'can_show']
+    base_permissions = ['can_list', 'can_show', 'can_post_log']
+    base_order = ('timestamp','desc')
+
+    list_columns = ['timestamp', 'message_type', 'message']
+
+    @expose_api(name='post_log', url='/api/postlog', methods=['POST'])
+    @has_access_api
+    def post_log(self):
+        data = json.loads(request.data)
+
+        log = Log(
+            message_type=data['message_type'],
+            message=data['message']
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        http_return_code = 200
+        response = make_response('Success', http_return_code)
+        return response
 
 
 class BeaconModelView(ModelView):
     datamodel = SQLAInterface(Beacon)
+    base_permissions = [
+        'can_list', 'can_show', 'can_add', 'can_edit', 'can_post_beacon']
 
     edit_form_extra_fields = {
         'beacon_filter': Field(
@@ -142,8 +171,17 @@ class BeaconModelView(ModelView):
             validators=[validators.Required(), BeaconDataMappingCheck()],
             description=(
                 'Extract message data based on the selected '
-                'mapping schema'))}
-
+                'mapping schema')),
+        'response_data_mapping': Field(
+            'Response Data Mapping',
+            widget=ResponseFieldsWidget(
+                response_types=get_all_response_types(),
+                packet_fields=get_all_packet_fields(),
+                response_fields=get_all_task_fields()),
+            validators=[validators.Required(), BeaconDataMappingCheck()],
+            description=(
+                'Format reply messages based on the selected mapping schema'))
+    }
     add_form_extra_fields = {
         'beacon_filter': Field(
             'Beacon Filter',
@@ -161,23 +199,35 @@ class BeaconModelView(ModelView):
             validators=[validators.Required(), BeaconDataMappingCheck()],
             description=(
                 'Extract message data based on the selected mapping schema')),
+        'response_data_mapping': Field(
+            'Response Data Mapping',
+            widget=ResponseFieldsWidget(
+                response_types=get_all_response_types(),
+                packet_fields=get_all_packet_fields(),
+                response_fields=get_all_task_fields()),
+            validators=[validators.Required(), BeaconDataMappingCheck()],
+            description=(
+                'Format reply messages based on the selected mapping schema'))
     }
-
-    edit_columns = ['name', 'beacon_filter', 'beacon_data_mapping']
-    add_columns = ['name', 'beacon_filter', 'beacon_data_mapping']
-    list_columns = ['name', 'beacon_filter', 'beacon_data_mapping']
+    edit_columns = [
+        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
+    add_columns = [
+        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
+    list_columns = [
+        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
 
     show_fieldsets = [
         ('Filter', {'fields': ['name', 'beacon_filter']}),
-        ('Data Mapping', {'fields': ['beacon_data_mapping']})]
+        ('Beacon Data Mapping', {'fields': ['beacon_data_mapping']}),
+        ('Task Data Mapping', {'fields': ['response_data_mapping']})]
 
     description_columns = {
         'name': 'Simple name for easy reference'
     }
 
-    @expose_api(name='process', url='/api/process', methods=['POST'])
+    @expose_api(name='post_beacon', url='/api/postbeacon', methods=['POST'])
     @has_access_api
-    def process_beacon(self):
+    def post_beacon(self):
 
         beacon = json_to_beacon(request.data)
 

@@ -1,6 +1,8 @@
 import logging
 from flask import Flask
 from flask.ext.appbuilder import SQLA, AppBuilder
+from lp import LP
+from threading import Timer
 
 """
  Logging configuration
@@ -16,6 +18,9 @@ appbuilder = AppBuilder(
     app, db.session, base_template='base.html',
     static_url_path='', static_folder='static')
 
+#lp = LP('/var/run/lp.pid')
+#lp.verbose = True
+#Timer(5, lp.run, ()).start()
 
 """
 from sqlalchemy.engine import Engine

@@ -2,6 +2,8 @@ import os
 from flask_appbuilder.security.manager import AUTH_DB
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+DEBUG = True
+
 # Your App secret key
 SECRET_KEY = '\2\1thisismyscretkey\1\2\e\y\y\h'
 
@@ -62,7 +64,7 @@ BABEL_DEFAULT_LOCALE = 'en'
 BABEL_DEFAULT_FOLDER = 'translations'
 # The allowed translation for you app
 LANGUAGES = {
-    'en': {'flag': 'gb', 'name': 'English'},
+    'en': {'flag': 'us', 'name': 'English'},
     'pt': {'flag': 'pt', 'name': 'Portuguese'},
     'pt_BR': {'flag': 'br', 'name': 'Pt Brazil'},
     'es': {'flag': 'es', 'name': 'Spanish'},

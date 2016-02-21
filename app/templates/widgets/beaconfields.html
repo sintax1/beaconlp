@@ -15,7 +15,7 @@
 
             </select>
             -->
-            <select class="my_select2" data-placeholder="Select Value" id="messagefield" name="messagefields[{{loop.index}}]" style="width:250px">
+            <select class="my_select2" data-placeholder="Select Value" id="packetfield" name="packetfields[{{loop.index}}]" style="width:250px">
                 <option>----</option>
                 {% for beacon_field in beacon_fields %}
                     <option value="{{beacon_field}}"{% if beacon_field == selected_beacon_field %} selected="selected"{% endif %}>{{beacon_field}}</option>
@@ -40,9 +40,9 @@
         $('#model_form').submit(function(event) { 
 
             var beaconfields = $('select[name^="beaconfields"]').map(function(){return $(this).val();}).get();
-            var messagefields = $('select[name^="messagefields"]').map(function(){return $(this).val();}).get();
+            var packetfields = $('select[name^="packetfields"]').map(function(){return $(this).val();}).get();
 
-            if ( ( beaconfields.indexOf('----') == -1 ) && ( messagefields.indexOf('----') == -1 ) ) { 
+            if ( ( beaconfields.indexOf('----') == -1 ) && ( packetfields.indexOf('----') == -1 ) ) { 
                 // Not the default value selected
 
                 fieldLength = beaconfields.length;
@@ -50,7 +50,7 @@
                 beacon_data_mapping = [];
 
                 for (var i=0; i < fieldLength; i++) {
-                    beacon_data_mapping.push( [beaconfields[i], messagefields[i]] );
+                    beacon_data_mapping.push( [beaconfields[i], packetfields[i]] );
                 }
           
                 // Submit Beacon Data Mappings
@@ -70,7 +70,7 @@
         $(add_button).click(function(e){
             e.preventDefault();
 
-            if ( wrapper.children().length >= $( "#messagefield" ).children().length) {
+            if ( wrapper.children().length >= $( "#packetfield" ).children().length) {
                 // Can't have more data mapping selections than there are data fields
                 return;
             }   

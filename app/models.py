@@ -3,7 +3,7 @@ from flask.ext.appbuilder import Model
 from flask.ext.appbuilder.models.mixins import FileColumn
 from flask.ext.appbuilder.models.decorators import renders
 from sqlalchemy import (
-    Column, Integer, String, ForeignKey, Boolean, DateTime, Table)
+    Column, Integer, String, ForeignKey, Boolean, DateTime, Table, Text)
 from sqlalchemy.orm import relationship
 
 import datetime
@@ -102,14 +102,20 @@ class Task(Model):
 class Log(Model):
     """Model for logging implant actions"""
     id = Column(Integer, primary_key=True)
-    type = Column(String(12))  # Error, Warning, Info
-    timestamp = Column(DateTime, onupdate=datetime.datetime.now)
+    timestamp = Column(
+        DateTime,
+        default=datetime.datetime.now)
+    message_type = Column(String(12), default="Info")  # Error, Warning, Info
+    message = Column(Text())
+
+    """
     implant_uuid = Column(String(36))
     implant_name = Column(String(80), nullable=True)
     task_id = Column(Integer)
     task_type = Column(Integer)
     task_command = Column(String(400), nullable=True)
     task_data = Column(FileColumn, nullable=True)
+    """
 
 
 class DataStore(Model):
@@ -120,6 +126,22 @@ class DataStore(Model):
     text_received = Column(String(600), nullable=True)
     data_received = Column(FileColumn, nullable=True)
 
+    def data_type(self):
+        if self.data_received:
+            return "Data"
+        return "Text"
+
+    def data(self):
+        if self.data_received:
+            return "%s" % (self.data_received)
+        else:
+            return "%s" % (self.text_received)
+
+    def __repr__(self):
+        if self.data_received:
+            return "%s: %s" % (self.data_received, self.data_type())
+        else:
+            return "%s: %s" % (self.text_received, self.data_type())
 
 class Beacon(Model):
     """Model for storing user created beacon filters"""

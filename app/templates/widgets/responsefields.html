@@ -1,0 +1,118 @@
+{% import 'appbuilder/general/lib.html' as lib %}
+
+<div id="response-type-wrapper">
+    <select class="my_select2" data-placeholder="Select Value" id="reponsetypefield" name="responsetypefield" style="width:500px">
+        <option>----</option>
+        {% for response_type in response_types %}
+            <option value="{{response_type}}"{% if response_type == selected_response_type %} selected="selected"{% endif %}>{{response_type}}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<br />
+
+<div class="packet-fields-wrapper select2-container form-control" id="s2id_packetfields" style="display:inline">
+
+    {% for selected_response_field, selected_response_field in data_mapping %}
+
+        <div id="packet-fields-options">
+            <select class="my_select2" data-placeholder="Select Value" id="packetfield" name="packetfields[{{loop.index}}]" style="width:250px">
+
+                <option>----</option>
+                {% for packet_field in packet_fields %}
+                    <option value="{{packet_field}}"{% if packet_field == selected_packet_field %} selected="selected"{% endif %}>{{packet_field}}</option>
+                {% endfor %}
+
+            </select>
+            -->
+            <select class="my_select2" data-placeholder="Select Value" id="responsefield" name="responsefields[{{loop.index}}]" style="width:250px">
+                <option>----</option>
+                {% for response_field in response_fields %}
+                    <option value="{{response_field}}"{% if response_field == selected_response_field %} selected="selected"{% endif %}>{{response_field}}</option>
+                {% endfor %}
+            </select>
+            
+        </div>
+
+    {% endfor %}
+
+</div>
+
+<script>
+
+    $(document).ready(function() { 
+
+        // Form Submit
+        $('#model_form').submit(function(event) { 
+
+            var packetfields = $('select[name^="packetfields"]').map(function(){return $(this).val();}).get();
+            var responsefields = $('select[name^="responsefields"]').map(function(){return $(this).val();}).get();
+
+            if ( ( packetfields.indexOf('----') == -1 ) && ( responsefields.indexOf('----') == -1 ) ) { 
+                // Not the default value selected
+
+                fieldLength = packetfields.length;
+
+                packet_data_mapping = [];
+
+                for (var i=0; i < fieldLength; i++) {
+                    packet_data_mapping.push( [packetfields[i], responsefields[i]] );
+                }
+          
+                // Submit packet Data Mappings
+                $('<input />').attr('type', 'hidden')
+                    .attr('name', "packet_data_mapping")
+                    .attr('value', JSON.stringify(packet_data_mapping, null, 2) )
+                    .appendTo('#model_form');
+            }
+
+            return true;
+        });
+
+        // packet data Field
+        var wrapper         = $(".packet-fields-wrapper");
+        var add_button      = $(".add-field-button"); 
+        
+        $(add_button).click(function(e){
+            e.preventDefault();
+
+            if ( wrapper.children().length >= $( "#responsefield" ).children().length) {
+                // Can't have more data mapping selections than there are data fields
+                return;
+            }   
+
+            $( "#packet-fields-options" )
+                .children( 'select' )
+                .select2('destroy')
+                .end()
+                .parent()
+                .append(
+                    $( '<div id="packet-fields-options"></div>').append(
+                        $( "#packet-fields-options" )
+                            .children().eq(0)
+                            .clone()
+                    )
+                    .append( ' --> ' )
+                    .append(
+                        $( "#packet-fields-options" )
+                            .children().eq(1)
+                            .clone()
+                    )
+                    .append( ' <a href="#" class="remove_field">Remove</a>' )
+                )
+                .end()
+                .children( 'select' ).select2()
+                .end()
+
+            $( wrapper ).children().last().children( 'select' ).select2();
+
+        });
+    
+        $(wrapper).on("click",".remove_field", function(e){
+            e.preventDefault(); $(this).parent('div').remove();
+        })
+
+    });
+
+</script>
+

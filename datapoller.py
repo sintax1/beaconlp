@@ -42,7 +42,6 @@ class DataPoller(object):
             self.beacon_filters.beacon_update(new_beacon_filters)
         except (TypeError, KeyError):
             self.logger("No Beacon Filters received")
-            self.logger("Beacon filter info received: %s" % new_beacon_filters)
 
     def check_tasks(self):
         """Get Tasks from the controller and update the queue"""

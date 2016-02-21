@@ -6,6 +6,8 @@ import re
 import binascii
 import json
 
+from lpexceptions import MalformedBeacon
+
 # OrderedDict to maintain order of fields when packing the data
 #   Available type range: 0x0 - 0xf
 BEACONS = OrderedDict([
@@ -72,6 +74,17 @@ def get_all_beacon_fields():
     return beacon_fields
 
 
+def get_all_task_fields_json():
+    return json.dumps(get_all_task_fields())
+
+
+def get_all_task_fields():
+    task_fields = []
+    for name, fields in TASKS.iteritems():
+        task_fields += [
+            key for key in fields.keys() if key not in task_fields]
+    return task_fields
+
 def get_beacon_by_type(beacon_type):
     for beacon_name, beacon_data in BEACONS.iteritems():
         if beacon_data['type'] == beacon_type:
@@ -110,6 +123,9 @@ class UUID(object):
                 self.uuid = '-'.join([
                     uuid_str[:8], uuid_str[8:12], uuid_str[12:16],
                     uuid_str[16:20], uuid_str[20:]])
+
+        if not re.match(uuid_regex, self.uuid):
+            raise MalformedBeacon('uuid', self.uuid)
 
     def raw(self):
         return binascii.unhexlify(self.stripped())

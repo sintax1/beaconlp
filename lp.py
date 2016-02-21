@@ -7,10 +7,12 @@ from daemon import Daemon
 from datapoller import DataPoller
 from filters import get_scapy_filter_from_querybuilder_rules
 from utils import get_byte_size
-from messages import message_test_data
-from messages import Beacon
+from messages import (
+    Beacon, BEACON_TYPES, message_test_data)
 import api
 
+from app.models import Log
+from lpexceptions import MalformedBeacon
 
 class BeaconFilterList(list):
 
@@ -81,9 +83,17 @@ class LP(Daemon):
                 beacon = self.extract_beacon_from_packet(
                     packet[0], data_map_list)
 
-                print beacon
+                if beacon.uuid in self.task_queue.keys():
+                    self.send_implant_task(
+                        pkt, self.task_queue[beacon.uuid].pop())
 
                 self.send_beacon_to_controller(beacon)
+
+    def send_implant_task(self, pkt, task):
+        """Send tasking to an Implant by responding to a Beacon"""
+        # TODO: Send task to implant by responding to beacon packet
+        pass
+
 
     def send_beacon_to_controller(self, beacon):
         api.send_beacon(beacon)
@@ -107,8 +117,11 @@ class LP(Daemon):
     def extract_beacon_from_packet(self, packet, data_map_list):
         """
         packet: scapy Packet object
-        list_of_beacon_data_mappings: ??
+        list_of_beacon_data_mappings: list of data mappings
         """
+
+        #print "Packet show: ", packet.show()
+        #print "Packet load: ", packet['Raw'].load.encode('hex')
 
         beacon = Beacon()
         beacon.external_ip_address = packet['IP'].src
@@ -130,92 +143,27 @@ class LP(Daemon):
                     data_size = get_byte_size(
                         message_test_data[beacon_field])
                     if beacon_field == 'data':
-
                         try:
                             data_size = beacon.data_length
                         except AttributeError:
                             # Normal if Beacon doesn't contain data
                             data_size = 0
+                    if beacon_field == 'data_length' and not (
+                        beacon.type == BEACON_TYPES['data']):
+                        beacon['%s' % beacon_field] = 0
+                        continue
 
-                    beacon['%s' % beacon_field] = packet_field_value[
-                        offset:offset+data_size]
-
-                    #if beacon_field == 'data_length' and not
-                    # (beacon.type & BEACON_TYPES['data']):
-                    #    # Stop reading data if the beacon
-                    #    # type is not data
-                    #    break
+                    try:
+                        beacon['%s' % beacon_field] = packet_field_value[
+                            offset:offset+data_size]
+                    except MalformedBeacon, e:
+                        print "Malformed Beacon: ", e
+                        break
 
                     offset += data_size
             else:
                 beacon['%s' % beacon_field] = packet_field_value
         return beacon
-
-    """
-    def extract_beacon_from_packet(self, packets, beacon_data_mapping_list):
-        # Extract beacon data from packet
-
-        for packet in packets:
-            # Iterate over each packet
-
-            for beacon_data_mapping in beacon_data_mapping_list:
-                # apply all data mappings registered for this packet
-
-                data_mapping = json.loads(beacon_data_mapping)
-
-                # Figure out which beacon fields are packed into
-                # the same packet field
-                data_mapping_dict = {}
-
-                for packet_field, beacon_field in data_mapping:
-                    if packet_field in data_mapping_dict:
-                        data_mapping_dict[packet_field].append(beacon_field)
-                    else:
-                        data_mapping_dict[packet_field] = [beacon_field]
-
-                # Add extracted data to Beacon object
-                beacon = Beacon()
-                beacon.external_ip_address = packet['IP'].src
-
-                # Apply each data map to this packet
-                mapped_data = data_mapping_dict.iteritems()
-
-                for packet_field, beacon_fields in mapped_data:
-                    field_protocol, field_subfield = packet_field.split(".")
-
-                    # Use scapy to extract the data from the packet field
-                    packet_field_value = eval(
-                        "packet['%s'].%s" % (field_protocol, field_subfield))
-
-                    if len(beacon_fields) > 1:
-                        # More than one beacon field within same packet field
-
-                        offset = 0
-                        for beacon_field in beacon_fields:
-                            data_size = get_byte_size(
-                                message_test_data[beacon_field])
-                            if beacon_field == 'data':
-
-                                try:
-                                    data_size = beacon.data_length
-                                except AttributeError:
-                                    # Normal if Beacon doesn't contain data
-                                    data_size = 0
-
-                            beacon['%s' % beacon_field] = packet_field_value[
-                                offset:offset+data_size]
-
-                            #if beacon_field == 'data_length' and not
-                            # (beacon.type & BEACON_TYPES['data']):
-                            #    # Stop reading data if the beacon
-                            #    # type is not data
-                            #    break
-
-                            offset += data_size
-                    else:
-                        beacon['%s' % beacon_field] = packet_field_value
-                return beacon
-    """
 
     def _new_beacon_filter_callback(self, filter):
         """Callback method called when a new filter is added to the queue"""
@@ -244,7 +192,8 @@ class LP(Daemon):
         except KeyError:
             self.filters[filter] = [beacon_data_mapping]
 
-        self._log("Registered new filter: %s" % (filter))
+        self._log("Registered new filter: %s\n%s" % (
+            filter, beacon_data_mapping))
 
     def unregister_filter(self, filter, beacon_data_mapping):
         """Remove a packet handler from the list of handlers"""
@@ -253,15 +202,16 @@ class LP(Daemon):
         else:
             self.filters[filter].remove(beacon_data_mapping)
 
-    def _log(self, msg):
+    def _log(self, msg, msg_type="Info"):
         """Private logger for messages"""
         if self.verbose:
             sys.stderr.write("%s\n" % str(msg))
-
+            api.send_log(msg, msg_type)
+        
     def _start_sniff(self):
         """Start listening for incoming packets"""
         self._log("Starting the packet sniffer")
-        sniff(prn=self._pkt_handler, store=0)
+        sniff(prn=self._pkt_handler, store=0, filter="udp")
 
     def start_data_poller(self):
         self._log("Starting the data poller")
