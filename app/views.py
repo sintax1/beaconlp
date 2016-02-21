@@ -134,6 +134,7 @@ class LogModelView(ModelView):
     @expose_api(name='post_log', url='/api/postlog', methods=['POST'])
     @has_access_api
     def post_log(self):
+        """API used for logging messages from LP to Controller"""
         data = json.loads(request.data)
 
         log = Log(
@@ -180,7 +181,8 @@ class BeaconModelView(ModelView):
                 response_fields=get_all_task_fields()),
             validators=[validators.Required(), BeaconDataMappingCheck()],
             description=(
-                'Format reply messages based on the selected mapping schema'))
+                'Format response messages based on the selected '
+                'mapping schema'))
     }
     add_form_extra_fields = {
         'beacon_filter': Field(
@@ -210,16 +212,20 @@ class BeaconModelView(ModelView):
                 'Format reply messages based on the selected mapping schema'))
     }
     edit_columns = [
-        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
+        'name', 'beacon_filter', 'beacon_data_mapping',
+        'response_data_mapping']
     add_columns = [
-        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
+        'name', 'beacon_filter', 'beacon_data_mapping',
+        'response_data_mapping']
     list_columns = [
-        'name', 'beacon_filter', 'beacon_data_mapping', 'response_data_mapping']
+        'name', 'beacon_filter', 'beacon_data_mapping',
+        'response_data_mapping']
 
     show_fieldsets = [
         ('Filter', {'fields': ['name', 'beacon_filter']}),
         ('Beacon Data Mapping', {'fields': ['beacon_data_mapping']}),
-        ('Task Data Mapping', {'fields': ['response_data_mapping']})]
+        ('Task Data Mapping', {
+            'fields': ['response_data_mapping']})]
 
     description_columns = {
         'name': 'Simple name for easy reference'
@@ -228,6 +234,7 @@ class BeaconModelView(ModelView):
     @expose_api(name='post_beacon', url='/api/postbeacon', methods=['POST'])
     @has_access_api
     def post_beacon(self):
+        """API used to send captured beacons from LP to Controller"""
 
         beacon = json_to_beacon(request.data)
 

@@ -4,6 +4,12 @@ from scapy.all import *  # noqa
 from collections import OrderedDict
 import json
 
+def get_packet_field_names(packet=None):
+    fields = []
+    for field in packet.fields_desc:
+        fields.append(field.name)
+    return fields
+
 
 def get_all_packet_types():
     """Generate a dictionary of all packet layer names and layer field names"""
@@ -14,10 +20,13 @@ def get_all_packet_types():
         if packet.__name__.startswith("_"):
             continue
 
+        """
         fields = []
         for field in packet.fields_desc:
             fields.append(field.name)
         packet_types[packet.__name__] = fields
+        """
+        packet_types[packet.__name__] = get_packet_field_names(packet=packet)
 
     return packet_types
 

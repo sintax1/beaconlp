@@ -1,8 +1,7 @@
 {% import 'appbuilder/general/lib.html' as lib %}
 
 <div id="response-type-wrapper">
-    <select class="my_select2" data-placeholder="Select Value" id="reponsetypefield" name="responsetypefield" style="width:500px">
-        <option>----</option>
+    <select class="my_select2" data-placeholder="Select Value" id="responsetypefield" name="responsetypefield" style="width:500px">
         {% for response_type in response_types %}
             <option value="{{response_type}}"{% if response_type == selected_response_type %} selected="selected"{% endif %}>{{response_type}}</option>
         {% endfor %}
@@ -11,12 +10,12 @@
 
 <br />
 
-<div class="packet-fields-wrapper select2-container form-control" id="s2id_packetfields" style="display:inline">
+<div class="packet-fields-wrapper select2-container form-control" id="s2id_responsepacketfields" style="display:inline">
 
-    {% for selected_response_field, selected_response_field in data_mapping %}
+    {% for selected_packet_field, selected_response_field in data_mapping %}
 
         <div id="packet-fields-options">
-            <select class="my_select2" data-placeholder="Select Value" id="packetfield" name="packetfields[{{loop.index}}]" style="width:250px">
+            <select class="my_select2" data-placeholder="Select Value" id="responsepacketfield" name="responsepacketfields[{{loop.index}}]" style="width:250px">
 
                 <option>----</option>
                 {% for packet_field in packet_fields %}
@@ -45,72 +44,35 @@
         // Form Submit
         $('#model_form').submit(function(event) { 
 
-            var packetfields = $('select[name^="packetfields"]').map(function(){return $(this).val();}).get();
+            var responsepacketfields = $('select[name^="responsepacketfields"]').map(function(){return $(this).val();}).get();
             var responsefields = $('select[name^="responsefields"]').map(function(){return $(this).val();}).get();
 
-            if ( ( packetfields.indexOf('----') == -1 ) && ( responsefields.indexOf('----') == -1 ) ) { 
+            if ( ( responsepacketfields.indexOf('----') == -1 ) && ( responsefields.indexOf('----') == -1 ) ) { 
                 // Not the default value selected
 
-                fieldLength = packetfields.length;
+                fieldLength = responsepacketfields.length;
 
-                packet_data_mapping = [];
+                response_data_mapping = [];
 
                 for (var i=0; i < fieldLength; i++) {
-                    packet_data_mapping.push( [packetfields[i], responsefields[i]] );
+                    response_data_mapping.push( [responsepacketfields[i], responsefields[i]] );
                 }
-          
-                // Submit packet Data Mappings
+         
+                // Submit response type
                 $('<input />').attr('type', 'hidden')
-                    .attr('name', "packet_data_mapping")
-                    .attr('value', JSON.stringify(packet_data_mapping, null, 2) )
+                    .attr('name', "response_data_type")
+                    .attr('value', $('#responsetypefield').val())
+                    .appendTo('#model_form');
+
+                // Submit response Data Mappings
+                $('<input />').attr('type', 'hidden')
+                    .attr('name', "response_data_mapping")
+                    .attr('value', JSON.stringify(response_data_mapping, null, 2) )
                     .appendTo('#model_form');
             }
 
             return true;
         });
-
-        // packet data Field
-        var wrapper         = $(".packet-fields-wrapper");
-        var add_button      = $(".add-field-button"); 
-        
-        $(add_button).click(function(e){
-            e.preventDefault();
-
-            if ( wrapper.children().length >= $( "#responsefield" ).children().length) {
-                // Can't have more data mapping selections than there are data fields
-                return;
-            }   
-
-            $( "#packet-fields-options" )
-                .children( 'select' )
-                .select2('destroy')
-                .end()
-                .parent()
-                .append(
-                    $( '<div id="packet-fields-options"></div>').append(
-                        $( "#packet-fields-options" )
-                            .children().eq(0)
-                            .clone()
-                    )
-                    .append( ' --> ' )
-                    .append(
-                        $( "#packet-fields-options" )
-                            .children().eq(1)
-                            .clone()
-                    )
-                    .append( ' <a href="#" class="remove_field">Remove</a>' )
-                )
-                .end()
-                .children( 'select' ).select2()
-                .end()
-
-            $( wrapper ).children().last().children( 'select' ).select2();
-
-        });
-    
-        $(wrapper).on("click",".remove_field", function(e){
-            e.preventDefault(); $(this).parent('div').remove();
-        })
 
     });
 

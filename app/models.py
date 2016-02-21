@@ -147,5 +147,7 @@ class Beacon(Model):
     """Model for storing user created beacon filters"""
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
-    beacon_filter = Column(String(600), nullable=False)
-    beacon_data_mapping = Column(String(600), nullable=False)
+    beacon_filter = Column(Text, nullable=False)
+    beacon_data_mapping = Column(Text, nullable=False)
+    response_data_type = Column(String(32), nullable=False)
+    response_data_mapping = Column(Text, nullable=False)

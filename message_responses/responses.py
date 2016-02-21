@@ -2,7 +2,8 @@ from scapy.all import *
 
 
 def get_all_response_types():
-    return [r.response_name for r in BaseResponse.__subclasses__()]
+    response_types = [r.response_name for r in BaseResponse.__subclasses__()]
+    return response_types
 
 
 def get_response_by_name(name):
@@ -44,8 +45,24 @@ class BaseResponse(object):
             layer.setfieldval(packet_field, response_data)
             reply[packet_layer] = layer 
 
+    def print_response(self, req):
+        response = self.create_response(req)
+        print "%s => %s" % (req, response)
+
+
+class GenericResponse(BaseResponse):
+
+    response_name = "Generic"
+
+    def create_response(self, req):
+        ip = req.getlayer(IP)
+        reply = IP(src=ip.dst, dst=ip.src)
+        return reply
+
 
 class ICMPResponse(BaseResponse):
+
+    response_name = "ICMP echo-reply"
 
     def create_response(self, req):
         ip = req.getlayer(IP)
@@ -55,7 +72,9 @@ class ICMPResponse(BaseResponse):
         return reply
 
 
-class DNSResponse(BaseResponse):
+class DNSTXTResponse(BaseResponse):
+
+    response_name = "DNS TXT Record"
 
     def create_response(self):
         pass

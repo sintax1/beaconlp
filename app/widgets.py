@@ -90,14 +90,14 @@ class ResponseFieldsWidget(object):
     packet_fields = []
     response_fields = []
     data_mapping = (
-        ('', 'type'),
-        ('', 'data_length'),
-        ('', 'data')
+        ('Raw.load', 'type'),
+        ('Raw.load', 'data_length'),
+        ('Raw.load', 'data')
     )
 
     def __init__(self, **kwargs):
         if 'response_types' not in kwargs:
-            kwargs['response_types'] = self.reply_type
+            kwargs['response_types'] = self.response_types
         if 'response_fields' not in kwargs:
             kwargs['response_fields'] = self.response_fields
         if 'packet_fields' not in kwargs:
@@ -110,7 +110,6 @@ class ResponseFieldsWidget(object):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', field.id)
         kwargs.setdefault('name', field.name)
-        kwargs.setdefault('response_types', self.response_types)
         kwargs.setdefault('data_mapping', self.data_mapping)
 
         ctx = _request_ctx_stack.top
