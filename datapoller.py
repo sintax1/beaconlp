@@ -5,7 +5,7 @@ import threading
 import time
 
 import api
-
+import json
 
 class DataPoller(object):
     """Class for polling for data from the BLiP controller
@@ -58,9 +58,7 @@ class DataPoller(object):
 
                 tasks = implant['all_tasks']
                 for task in tasks:
-                    if uuid not in self.task_queue.keys():
-                        self.task_queue[uuid] = set()
-                    self.task_queue[uuid].add(task)
+                    self.task_queue.add_task(uuid, json.loads(task))
 
         except (TypeError, KeyError):
             self.logger("No Tasks received")

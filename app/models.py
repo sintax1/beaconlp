@@ -7,6 +7,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 import datetime
+import json
 
 #TODO: Remove this
 import sys
@@ -61,9 +62,11 @@ class Implant(Model):
     last_beacon_received = Column(DateTime, nullable=True)
 
     tasks = relationship(
-        'Task', secondary=assoc_tasks_implant, backref='implant')
+        'Task', secondary=assoc_tasks_implant,
+        backref='implant')
     datastores = relationship(
-        'DataStore', secondary=assoc_datastore_implant, backref='implant')
+        'DataStore', secondary=assoc_datastore_implant,
+        backref='implant')
 
     def tasks_assigned(self):
         if self.tasks:
@@ -96,8 +99,16 @@ class Task(Model):
         return Markup(TASK_TYPES[self.type][1])
 
     def __repr__(self):
-        return '%r : %r' % (str(TASK_TYPES[self.type][1]), str(self.command))
+        data = {
+            'id': self.id,
+            'type': self.type,
+            'command': self.command,
+            'data': self.data
+        }
+        return json.dumps(data)
 
+    def toStr(self):
+        return '%r : %r' % (str(TASK_TYPES[self.type][1]), str(self.command))
 
 class Log(Model):
     """Model for logging implant actions"""
@@ -107,15 +118,6 @@ class Log(Model):
         default=datetime.datetime.now)
     message_type = Column(String(12), default="Info")  # Error, Warning, Info
     message = Column(Text())
-
-    """
-    implant_uuid = Column(String(36))
-    implant_name = Column(String(80), nullable=True)
-    task_id = Column(Integer)
-    task_type = Column(Integer)
-    task_command = Column(String(400), nullable=True)
-    task_data = Column(FileColumn, nullable=True)
-    """
 
 
 class DataStore(Model):

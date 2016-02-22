@@ -105,6 +105,22 @@ class ImplantModelView(ModelView):
         'tasks': 'Tasks assigned but not yet processed by this implant'
     }
 
+    @expose_api(name='remove_task', url='/api/removetask', methods=['POST'])
+    @has_access_api
+    def remove_task(self):
+        """API used for removing a task from Controller"""
+        data = json.loads(request.data)
+
+        uuid = data['implant_uuid']
+        implant = db.session.query(Implant).filter(Implant.uuid==uuid).first()
+        #task = implant.tasks.filter(Task.id==data['task_id'])
+        task = db.session.query(Task).filter(Task.id==data['task_id']).first()
+        implant.tasks.remove(task)
+        db.session.commit()
+
+        http_return_code = 200
+        response = make_response('Success', http_return_code)
+        return response
 
 class DataStoreModelView(ModelView):
     datamodel = SQLAInterface(DataStore)

@@ -30,6 +30,14 @@ def _post(url, data):
             Trying again in 5 seconds."""
         time.sleep(5)
 
+def remove_task(implant_uuid, task_id):
+    """Remove the implant task from the controller"""
+    data = {
+        'implant_uuid': implant_uuid,
+        'task_id': task_id
+    }
+    data_json = json.dumps(data)
+    return _post(_url('/removetask', model_name='implant'), data=data_json)
 
 def get_beacon_filters():
     """Return a dict of Beacons"""

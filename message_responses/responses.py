@@ -37,7 +37,7 @@ class BaseResponse(object):
             'Raw.load': 'data'
         }
         """
-        for packet_data, response_data in data_mapping.iteritems():
+        for packet_data, response_data in data_mapping:
             packet_layer, packet_field = packet_data.split(".")
             layer = reply.getlayer(packet_layer)
             if isinstance(response_data, list):
