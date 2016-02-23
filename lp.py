@@ -11,10 +11,10 @@ from messages import (
     Beacon, BEACON_TYPES, message_test_data)
 import api
 
-from app.models import Log
 from lpexceptions import MalformedBeacon
 
 from message_responses.responses import get_response_by_name
+
 
 class BeaconFilterList(list):
 
@@ -59,12 +59,13 @@ class ImplantTaskQueue(dict):
             self[implant_uuid].remove(task)
         if len(self[implant_uuid]) < 1:
             del self[implant_uuid]
-        api.remove_task(implant_uuid, task['id'])
+        #api.remove_task(implant_uuid, task['id'])
 
     def get_next_task(self, implant_uuid):
         if implant_uuid in self.keys():
             return self[implant_uuid][0]
         return None
+
 
 class LP(Daemon):
     """Listening Post (LP) service for receiving and processing Command &
@@ -125,10 +126,10 @@ class LP(Daemon):
                     self.send_beacon_to_controller(beacon)
 
     def send_implant_task(
-        self, pkt, response_data_type, response_data_mapping, task):
+            self, pkt, response_data_type, response_data_mapping, task):
         """Send tasking to an Implant by responding to a Beacon"""
         self._log("Sending task to implant: %s" % task)
-     
+
         response_factory = get_response_by_name(response_data_type)()
         response = response_factory.create_response(pkt)
         response_factory.add_response_data(
@@ -187,7 +188,7 @@ class LP(Daemon):
                             # Normal if Beacon doesn't contain data
                             data_size = 0
                     if beacon_field == 'data_length' and not (
-                        beacon.type == BEACON_TYPES['data']):
+                            beacon.type == BEACON_TYPES['data']):
                         beacon['%s' % beacon_field] = 0
                         continue
 
@@ -243,7 +244,7 @@ class LP(Daemon):
         if self.verbose:
             sys.stderr.write("%s\n" % str(msg))
             api.send_log(msg, msg_type)
-        
+
     def _start_sniff(self):
         """Start listening for incoming packets"""
         self._log("Starting the packet sniffer")

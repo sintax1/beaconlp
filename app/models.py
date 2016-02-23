@@ -99,16 +99,17 @@ class Task(Model):
         return Markup(TASK_TYPES[self.type][1])
 
     def __repr__(self):
-        data = {
+        data = self.command
+        if self.data:
+            data = self.data
+        d = {
             'id': self.id,
             'type': self.type,
-            'command': self.command,
-            'data': self.data
+            'data_length': len(data),
+            'data': data
         }
-        return json.dumps(data)
+        return json.dumps(d)
 
-    def toStr(self):
-        return '%r : %r' % (str(TASK_TYPES[self.type][1]), str(self.command))
 
 class Log(Model):
     """Model for logging implant actions"""
@@ -144,6 +145,7 @@ class DataStore(Model):
             return "%s: %s" % (self.data_received, self.data_type())
         else:
             return "%s: %s" % (self.text_received, self.data_type())
+
 
 class Beacon(Model):
     """Model for storing user created beacon filters"""

@@ -4,6 +4,7 @@ from scapy.all import *  # noqa
 from collections import OrderedDict
 import json
 
+
 def get_packet_field_names(packet=None):
     fields = []
     for field in packet.fields_desc:

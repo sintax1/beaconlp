@@ -80,6 +80,7 @@ class BeaconFieldsWidget(object):
         args.update(kwargs)
         return template.render(args)
 
+
 class ResponseFieldsWidget(object):
     """
     Form widget for message response format

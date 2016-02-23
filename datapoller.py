@@ -7,6 +7,7 @@ import time
 import api
 import json
 
+
 class DataPoller(object):
     """Class for polling for data from the BLiP controller
 

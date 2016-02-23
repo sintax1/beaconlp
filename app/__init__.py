@@ -1,8 +1,6 @@
 import logging
 from flask import Flask
 from flask.ext.appbuilder import SQLA, AppBuilder
-from lp import LP
-from threading import Timer
 
 """
  Logging configuration

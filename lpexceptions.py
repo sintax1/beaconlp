@@ -5,4 +5,3 @@ class MalformedBeacon(Exception):
 
     def __str__(self):
         return repr("%s: %s" % (self.field, self.value))
-

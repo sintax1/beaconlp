@@ -19,13 +19,7 @@ def get_byte_size(n):
 
 
 def test_beacon_data_mapping(message_test_data, beacon_data_mapping_json):
-    # TODO: Improve checking if packet field is big enough to fit the
-    # beacon data
-    # Fix combining multiple beacon fields into same packet
-    # field (i.e. Raw.load, IP.options, etc.)
-
     beacon_data_mapping = json.loads(beacon_data_mapping_json)
-
     packet = {}
 
     for packet_field, beacon_fields in beacon_data_mapping:

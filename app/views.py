@@ -17,11 +17,10 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from filters import (
     get_querybuilder_filters_json, get_all_packet_fields)
 from messages import (
-    get_all_beacon_fields_json, get_all_beacon_fields, 
+    get_all_beacon_fields_json, get_all_beacon_fields,
     json_to_beacon, get_all_task_fields)
 from message_responses.responses import get_all_response_types
-from flask_appbuilder.security.decorators import (
-    has_access_api, permission_name)
+from flask_appbuilder.security.decorators import has_access_api
 
 from datetime import datetime
 from utils import is_ascii
@@ -72,7 +71,7 @@ class TaskModelView(ModelView):
 
 class ImplantModelView(ModelView):
     datamodel = SQLAInterface(Implant)
-    base_order = ('last_beacon_received','desc')
+    base_order = ('last_beacon_received', 'desc')
 
     edit_form_extra_fields = {
         'assigned_tasks': QuerySelectField(
@@ -112,9 +111,10 @@ class ImplantModelView(ModelView):
         data = json.loads(request.data)
 
         uuid = data['implant_uuid']
-        implant = db.session.query(Implant).filter(Implant.uuid==uuid).first()
-        #task = implant.tasks.filter(Task.id==data['task_id'])
-        task = db.session.query(Task).filter(Task.id==data['task_id']).first()
+        implant = db.session.query(Implant).filter(
+            Implant.uuid == uuid).first()
+        task = db.session.query(Task).filter(
+            Task.id == data['task_id']).first()
         implant.tasks.remove(task)
         db.session.commit()
 
@@ -122,11 +122,11 @@ class ImplantModelView(ModelView):
         response = make_response('Success', http_return_code)
         return response
 
+
 class DataStoreModelView(ModelView):
     datamodel = SQLAInterface(DataStore)
     base_permissions = ['can_list', 'can_show']
-    base_order = ('timestamp','desc')
-
+    base_order = ('timestamp', 'desc')
     label_columns = {'data_type': 'Type'}
     list_columns = ['timestamp', 'data_type', 'data']
 
@@ -143,7 +143,7 @@ class DataStoreModelView(ModelView):
 class LogModelView(ModelView):
     datamodel = SQLAInterface(Log)
     base_permissions = ['can_list', 'can_show', 'can_post_log']
-    base_order = ('timestamp','desc')
+    base_order = ('timestamp', 'desc')
 
     list_columns = ['timestamp', 'message_type', 'message']
 

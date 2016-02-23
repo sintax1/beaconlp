@@ -10,6 +10,9 @@ from lpexceptions import MalformedBeacon
 
 # OrderedDict to maintain order of fields when packing the data
 #   Available type range: 0x0 - 0xf
+# 0x0 : ping
+# 0x1 : send data
+# 0x2 : get tasking
 BEACONS = OrderedDict([
     ('ping', OrderedDict([
         ('type', 0x0),
@@ -84,6 +87,7 @@ def get_all_task_fields():
         task_fields += [
             key for key in fields.keys() if key not in task_fields]
     return task_fields
+
 
 def get_beacon_by_type(beacon_type):
     for beacon_name, beacon_data in BEACONS.iteritems():
@@ -223,14 +227,6 @@ class Beacon(Message):
             buff += struct.pack('!H', self.data_length)
             buff += struct.pack('!%ss' % self.data_length, self.data)
         return buff
-
-
-class Task(Message):
-    """Task message type"""
-
-    def pack(self):
-        """Return all Task data packed into string of network ordered bytes"""
-        pass
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ def _post(url, data):
             Trying again in 5 seconds."""
         time.sleep(5)
 
+
 def remove_task(implant_uuid, task_id):
     """Remove the implant task from the controller"""
     data = {
@@ -38,6 +39,7 @@ def remove_task(implant_uuid, task_id):
     }
     data_json = json.dumps(data)
     return _post(_url('/removetask', model_name='implant'), data=data_json)
+
 
 def get_beacon_filters():
     """Return a dict of Beacons"""
@@ -50,7 +52,9 @@ def get_implants():
 
 
 def send_beacon(beacon):
-    return _post(_url('/postbeacon', model_name='beacon'), data=beacon.toJson())
+    return _post(
+        _url('/postbeacon', model_name='beacon'), data=beacon.toJson())
+
 
 def send_log(message, message_type="Info"):
     data = {

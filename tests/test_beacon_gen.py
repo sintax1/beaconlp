@@ -13,7 +13,10 @@ def send_icmp_beacon(dst=None, beacon=None):
     print "Sending ICMP:", beacon.toJson()
     print beacon.pack().encode('hex')
     packet = IP(dst=dst)/ICMP()/beacon.pack()
-    send(packet)
+    #send(packet)
+    p = sr1(packet, filter="icmp", timeout=2)
+    if p:
+        p.show()
 
 
 def send_udp_beacon(dst=None, beacon=None):
