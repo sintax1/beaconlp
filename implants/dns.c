@@ -124,8 +124,8 @@ int main( int argc , char *argv[])
     // Append the Beacon
     struct Beacon *beacon = NULL;
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon));
-    //beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
-    beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
+    beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
+    //beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
     beacon->uuid = UUID;
     ngethostbyname(hostname, T_TXT, beacon, 3);
  
@@ -191,7 +191,9 @@ void ngethostbyname(unsigned char *host, int query_type, struct Beacon* beacon, 
     if (beacon == NULL) {
         if( sendto(s,(char*)buf,sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION),0,(struct sockaddr*)&dest,sizeof(dest)) < 0);
     }else {
-        //printf("beacon available\n");
+        printf("beacon available\n");
+        printf("beacon->type = %d\n", beacon->type);
+        printf("beacon->uuid = %d\n", beacon->uuid);
         memcpy(&buf[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1) + sizeof(struct QUESTION)], beacon, beacon_size);
         retcode = sendto(s,(char*)buf,sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION) + beacon_size, 0,(struct sockaddr*)&dest,sizeof(dest));
     }
