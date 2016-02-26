@@ -113,6 +113,9 @@ class LP(Daemon):
                     beacon = self.extract_beacon_from_packet(
                         packet[0], data_map_list)
 
+                    self._log("Received beacon: %s" % beacon)
+                    self._log("Received beacon.type: %s" % beacon.type)
+
                     # Process any queued tasking for this implant
                     task = self.task_queue.get_next_task(beacon.uuid)
                     if task:
@@ -167,8 +170,11 @@ class LP(Daemon):
             field_protocol, field_subfield = packet_field.split(".")
 
             # Use scapy to extract the data from the packet field
+            self._log("Getting packet layer: %s" % field_protocol)
             layer = packet.getlayer(eval(field_protocol))
+            self._log("Getting value for field: %s in layer: %s" % (field_subfield, layer))
             packet_field_value = layer.getfieldval(field_subfield)
+            self._log("field value: %s" % packet_field_value.encode('hex'))
             """
             packet_field_value = eval(
                 "packet['%s'].%s" % (field_protocol, field_subfield))
@@ -181,6 +187,8 @@ class LP(Daemon):
                 for beacon_field in beacon_fields:
                     data_size = get_byte_size(
                         message_test_data[beacon_field])
+                    print "beacon_field: %s" % beacon_field
+                    print "data_size: %s" % data_size
                     if beacon_field == 'data':
                         try:
                             data_size = beacon.data_length
@@ -191,10 +199,11 @@ class LP(Daemon):
                             beacon.type == BEACON_TYPES['data']):
                         beacon['%s' % beacon_field] = 0
                         continue
-
                     try:
                         beacon['%s' % beacon_field] = packet_field_value[
                             offset:offset+data_size]
+                        self._log("beacon[%s] => %s" % (beacon_field, packet_field_value[
+                            offset:offset+data_size].encode('hex')))
                     except MalformedBeacon, e:
                         print "Malformed Beacon: ", e
                         break
