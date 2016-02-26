@@ -12,20 +12,19 @@ from lpexceptions import MalformedBeacon
 #   Available type range: 0x0 - 0xf
 # 0x0 : ping
 # 0x1 : send data
-# 0x2 : get tasking
 #  Beacon type field is both message format and message type packed into
 # a single byte (format = upper nibble, type = lower nibble)
 BEACONS = OrderedDict([
     ('ping', OrderedDict([
         ('type', 0x0),
-        ('uuid', '00000000-0000-0000-0000-000000000000')
+        ('uuid', 0x0000)
     ])),
     ('data', OrderedDict([
         ('type', 0x1),
-        ('uuid', '00000000-0000-0000-0000-000000000000'),
+        ('uuid', 0x0000),
         ('data_length', 0x0000),
         ('data', None)
-    ]))
+    ])),
 ])
 BEACON_TYPES = {}
 for beacon_name, beacon_data in BEACONS.iteritems():
@@ -63,7 +62,7 @@ MESSAGE_FORMATS = OrderedDict([
 
 message_test_data = {
     'type': 0xff,
-    'uuid': 0xa2810bec54cf419cbfa2a9cc72dd13fb,
+    'uuid': 0x1234,
     'data_length': 0xffff,
     'data': 'ls'
 }
@@ -126,14 +125,10 @@ class Message(object):
 
     def __setattr__(self, key, value):
         """Overriden object method to modify values on update"""
-        print "__setattr__: %s =>%s" % (key, value)
         if key == 'type' and isinstance(value, str):
-            print "Message.type: %s" % value.encode('hex')
-            print "struct.unpack: %s" % struct.unpack('!B', value)
             msgtype = int(struct.unpack('!B', value)[0])
             self['format'] = (msgtype & 0xf0) >> 4
             value = msgtype & 0x0f
-            print "Message.type: %d" % value
         elif key == 'format' and isinstance(value, str):
             value = int(struct.unpack('!B', value)[0]) & 0x0f
         elif key == 'data' and value:
@@ -155,7 +150,6 @@ class Message(object):
         like this message['attribute'] = x"""
         if key not in self.keys():
             self.key_list.append(key)
-        print "__setitem__: %s =>%s" % (key, value)
         self.__setattr__(key, value)
 
     def iteritems(self):
@@ -182,21 +176,20 @@ class Message(object):
 class Beacon(Message):
     """Beacon message type"""
 
-    def __init__(self, uuid='00000000-0000-0000-0000-000000000000', **kwargs):
-        self.uuid = UUID(uuid).string()
+    def __init__(self, uuid=0x0000, **kwargs):
+        self.uuid = uuid
         self.external_ip_adress = ''
         super(Beacon, self).__init__(**kwargs)
 
     def __setattr__(self, key, value):
-
-        if key == 'uuid':
-            value = UUID(value).string()
+        if key == 'uuid' and isinstance(value, str):
+            value = struct.unpack('!H', value)[0]
         super(Beacon, self).__setattr__(key, value)
 
     def pack(self):
         """Return all Beacon data packed into string of
         network ordered bytes"""
-        buff = struct.pack('!B16s', self.type, UUID(self.uuid).raw())
+        buff = struct.pack('!BH', self.type, self.uuid)
         if self.data_length > 0:
             buff += struct.pack('!H', self.data_length)
             buff += struct.pack('!%ss' % self.data_length, self.data)

@@ -6,6 +6,8 @@ from sqlalchemy import (
     Column, Integer, String, ForeignKey, Boolean, DateTime, Table, Text)
 from sqlalchemy.orm import relationship
 
+from messages.py import TASK_TYPES
+
 import datetime
 import json
 
@@ -16,12 +18,13 @@ sys.path.append('/root')
 
 from utils import generate_uuid
 
+"""
 TASK_TYPES = (
     ('0', 'CLI Command'),
     ('1', 'Python Commands'),
     ('2', 'Binary Upload & Execute'),
 )
-
+"""
 assoc_tasks_implant = Table(
     'tasks_implant', Model.metadata,
     Column('id', Integer, primary_key=True),
@@ -49,7 +52,8 @@ class Implant(Model):
     """
 
     id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), unique=True, default=generate_uuid)
+    #uuid = Column(String(36), unique=True, default=generate_uuid)
+    uuid = Column(Integer, unique=True, default=generate_uuid)
 
     name = Column(String(80), nullable=True)
     internal_ip_address = Column(String(16), nullable=True)
