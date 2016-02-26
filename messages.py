@@ -58,6 +58,7 @@ for task_name, task_data in TASKS.iteritems():
 MESSAGE_FORMATS = OrderedDict([
     ('plain', 0x0),
     ('base64', 0x1),
+    ('xor', 0x2),
 ])
 
 message_test_data = {
@@ -67,6 +68,9 @@ message_test_data = {
     'data': 'ls'
 }
 
+
+def xor(data, b = 0x33):
+    return ''.join([c ^ b for c in data])
 
 def json_to_beacon(beacon_json):
     return json.loads(beacon_json)
@@ -108,50 +112,6 @@ def get_task_by_type(task_type):
         if task_data['type'] == task_type:
             return task_data
     return None
-
-
-class UUID(object):
-    """class for normalizing UUIDs"""
-    def __init__(self, uuid_str='00000000-0000-0000-0000-000000000000'):
-
-        uuid_regex = re.compile(
-            '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
-        uuid_regex_no_dash = re.compile('[0-9a-f]{32}')
-        self.uuid = uuid_str
-
-        if isinstance(uuid_str, str):
-            # format: 00000000-0000-0000-0000-000000000000
-            if uuid_regex.match(uuid_str):
-                self.uuid = uuid_str
-            # format: 00000000000000000000000000000000
-            elif uuid_regex_no_dash.match(uuid_str):
-                self.uuid = '-'.join([
-                    uuid_str[:8], uuid_str[8:12], uuid_str[12:16],
-                    uuid_str[16:20], uuid_str[20:]])
-            else:
-                # format: raw bytes
-                uuid_str = binascii.hexlify(uuid_str)
-                self.uuid = '-'.join([
-                    uuid_str[:8], uuid_str[8:12], uuid_str[12:16],
-                    uuid_str[16:20], uuid_str[20:]])
-
-        if not re.match(uuid_regex, self.uuid):
-            raise MalformedBeacon('uuid', self.uuid)
-
-    def raw(self):
-        return binascii.unhexlify(self.stripped())
-
-    def string(self):
-        return str(self.uuid)
-
-    def stripped(self):
-        return self.uuid.translate(None, '-')
-
-    def __repr__(self):
-        return self.uuid
-
-    def __str__(self):
-        return self.uuid
 
 
 class Message(object):

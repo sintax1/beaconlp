@@ -23,4 +23,4 @@ struct Task {
 // Message formats
 #define FORMAT_PLAIN    0x0
 #define FORMAT_BASE64   0x1
-
+#define FORMAT_XOR      0x2

