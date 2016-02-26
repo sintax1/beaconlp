@@ -13,6 +13,8 @@ from lpexceptions import MalformedBeacon
 # 0x0 : ping
 # 0x1 : send data
 # 0x2 : get tasking
+#  Beacon type field is both message format and message type packed into
+# a single byte (format = upper nibble, type = lower nibble)
 BEACONS = OrderedDict([
     ('ping', OrderedDict([
         ('type', 0x0),
@@ -31,6 +33,8 @@ for beacon_name, beacon_data in BEACONS.iteritems():
 
 # OrderedDict to maintain order of fields when packing the data
 #   Available type range: 0x0 - 0xf
+# 0x0 : cli
+# 0x1 : python
 TASKS = OrderedDict([
     ('cli_command', OrderedDict([
         ('type', 0x0),
@@ -47,7 +51,10 @@ TASK_TYPES = {}
 for task_name, task_data in TASKS.iteritems():
     TASK_TYPES[task_name] = task_data['type']
 
-# Message formats (available range: 0x0 - 0xf)
+# Message formats
+#  Available format range: 0x0 - 0xf
+# 0x0 : plain
+# 0x1 : base64
 MESSAGE_FORMATS = OrderedDict([
     ('plain', 0x0),
     ('base64', 0x1),
@@ -159,10 +166,16 @@ class Message(object):
 
     def __setattr__(self, key, value):
         """Overriden object method to modify values on update"""
+        print "__setattr__: %s =>%s" % (key, value)
         if key == 'type' and isinstance(value, str):
-            value = int(struct.unpack('!B', value)[0]) & 0xf
+            print "Message.type: %s" % value.encode('hex')
+            print "struct.unpack: %s" % struct.unpack('!B', value)
+            msgtype = int(struct.unpack('!B', value)[0])
+            self['format'] = (msgtype & 0xf0) >> 4
+            value = msgtype & 0x0f
+            print "Message.type: %d" % value
         elif key == 'format' and isinstance(value, str):
-            value = int(struct.unpack('!B', value)[0]) & 0xf
+            value = int(struct.unpack('!B', value)[0]) & 0x0f
         elif key == 'data' and value:
             self.data_length = len(value)
         elif key == 'data_length' and isinstance(value, str):
@@ -172,9 +185,9 @@ class Message(object):
     def __getattribute__(self, key):
         """Overriden object method to modify return values dynamically"""
         if key == 'type':
-            format = super(Message, self).__getattribute__('format')
-            type = super(Message, self).__getattribute__('type')
-            return (format << 4) | (type) & 0xff
+            msgformat = super(Message, self).__getattribute__('format')
+            msgtype = super(Message, self).__getattribute__('type')
+            return (msgformat << 4) | (msgtype) & 0xff
         return super(Message, self).__getattribute__(key)
 
     def __setitem__(self, key, value):
@@ -182,6 +195,7 @@ class Message(object):
         like this message['attribute'] = x"""
         if key not in self.keys():
             self.key_list.append(key)
+        print "__setitem__: %s =>%s" % (key, value)
         self.__setattr__(key, value)
 
     def iteritems(self):

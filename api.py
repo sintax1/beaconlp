@@ -2,7 +2,7 @@ import requests
 import time
 import json
 
-CONTROLLER_API_URL = 'http://172.16.201.245:8080'
+CONTROLLER_API_URL = 'http://52.37.66.79:8080'
 
 
 def _url(path, model_name='beacon'):
