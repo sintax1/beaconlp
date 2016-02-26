@@ -55,10 +55,11 @@ class DataPoller(object):
             implants = implants['result']
 
             for implant in implants:
-                uuid = implant['uuid']
+                uuid = int(implant['uuid'])
 
                 tasks = implant['all_tasks']
                 for task in tasks:
+                    print("uuid: %s => %s" % (uuid, json.loads(task)))
                     self.task_queue.add_task(uuid, json.loads(task))
 
         except (TypeError, KeyError):

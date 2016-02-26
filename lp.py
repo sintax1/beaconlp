@@ -50,6 +50,8 @@ class ImplantTaskQueue(dict):
         super(ImplantTaskQueue, self).__delitem__(key)
 
     def add_task(self, implant_uuid, task):
+        print "Add task: %s ==> %s" % (implant_uuid, task)
+        print "implant_uuid type: %s" % type(implant_uuid)
         if implant_uuid not in self.keys():
             self[implant_uuid] = list()
         self[implant_uuid].append(task)
@@ -62,7 +64,11 @@ class ImplantTaskQueue(dict):
         #api.remove_task(implant_uuid, task['id'])
 
     def get_next_task(self, implant_uuid):
+        print "check for tasks: %s" % implant_uuid
+        print "implant_uuid type: %s" % type(implant_uuid)
+        print self.__dict__
         if implant_uuid in self.keys():
+            print "Found task for %s => %s" % (implant_uuid, self[implant_uuid][0])
             return self[implant_uuid][0]
         return None
 
@@ -110,8 +116,12 @@ class LP(Daemon):
                     data_map_list = json.loads(
                         beacon_data['beacon_data_mapping'])
 
-                    beacon = self.extract_beacon_from_packet(
-                        packet[0], data_map_list)
+                    try:
+                        beacon = self.extract_beacon_from_packet(
+                            packet[0], data_map_list)
+                    except:
+                        print "Error trying to extract beacon"
+                        return
 
                     self._log("Received beacon: %s" % beacon)
                     self._log("Received beacon.type: %s" % beacon.type)
@@ -119,6 +129,7 @@ class LP(Daemon):
                     # Process any queued tasking for this implant
                     task = self.task_queue.get_next_task(beacon.uuid)
                     if task:
+                        print "Beacon has tasking: %s" % task
                         self.send_implant_task(
                             pkt,
                             beacon_data['response_data_type'],
@@ -170,11 +181,8 @@ class LP(Daemon):
             field_protocol, field_subfield = packet_field.split(".")
 
             # Use scapy to extract the data from the packet field
-            self._log("Getting packet layer: %s" % field_protocol)
             layer = packet.getlayer(eval(field_protocol))
-            self._log("Getting value for field: %s in layer: %s" % (field_subfield, layer))
             packet_field_value = layer.getfieldval(field_subfield)
-            self._log("field value: %s" % packet_field_value.encode('hex'))
             """
             packet_field_value = eval(
                 "packet['%s'].%s" % (field_protocol, field_subfield))
@@ -187,8 +195,6 @@ class LP(Daemon):
                 for beacon_field in beacon_fields:
                     data_size = get_byte_size(
                         message_test_data[beacon_field])
-                    print "beacon_field: %s" % beacon_field
-                    print "data_size: %s" % data_size
                     if beacon_field == 'data':
                         try:
                             data_size = beacon.data_length

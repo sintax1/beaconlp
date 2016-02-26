@@ -4,10 +4,11 @@ import uuid
 import json
 from scapy.all import *  # noqa
 from math import log
-
+import random
 
 def generate_uuid():
-    return str(uuid.uuid4())
+    #return str(uuid.uuid4())
+    return random.randint(1, 0xfff)
 
 
 def get_byte_size(n):

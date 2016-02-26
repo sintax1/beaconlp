@@ -1,5 +1,6 @@
 from scapy.all import *  # noqa
 import struct
+import json
 
 def get_all_response_types():
     response_types = [r.response_name for r in BaseResponse.__subclasses__()]
@@ -38,6 +39,7 @@ class BaseResponse(object):
         }
         """
 
+
         data_map = {}
         for packet_field, response_field in data_mapping:
             if packet_field in data_map.keys():
@@ -58,10 +60,12 @@ class BaseResponse(object):
                     buff += struct.pack(
                         '!%ss' % data['data_length'], str(data['data']))
 
-            layer = reply.getlayer(packet_layer)
+            layer_type = eval(packet_layer)
+            layer = reply.getlayer(layer_type)
+            print "layer type: %s" % type(layer)
             layer.setfieldval(packet_field, buff)
-            reply[packet_layer] = layer
 
+        print "Reply Packet:"
         print reply.show()
 
     def print_response(self, req):
@@ -95,5 +99,14 @@ class DNSTXTResponse(BaseResponse):
 
     response_name = "DNS TXT Record"
 
-    def create_response(self):
-        pass
+    def create_response(self, req):
+        ip = req.getlayer(IP)
+        udp = req.getlayer(UDP)
+        
+        dns = req.getlayer(DNS)
+        dns_resp = DNS(id=dns.id, ancount=1, qd=dns.qd)
+        print "Request Packet:"
+        print req.show()
+        dns_resp.an = DNSRR(rrname=dns.qd.qname,type="TXT",rdata="test")
+        reply = IP(dst=ip.src)/UDP(dport=udp.sport, sport=53)/dns_resp
+        return reply
