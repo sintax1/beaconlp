@@ -6,7 +6,7 @@ from sqlalchemy import (
     Column, Integer, String, ForeignKey, Boolean, DateTime, Table, Text)
 from sqlalchemy.orm import relationship
 
-from messages.py import TASK_TYPES
+from messages import TASK_TYPES
 
 import datetime
 import json
