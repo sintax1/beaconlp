@@ -8,7 +8,7 @@ from datapoller import DataPoller
 from filters import get_scapy_filter_from_querybuilder_rules
 from utils import get_byte_size
 from messages import (
-    Beacon, BEACON_TYPES, message_test_data)
+    Beacon, BEACON_TYPES, message_test_data, decode, MESSAGE_FORMATS)
 import api
 
 from lpexceptions import MalformedBeacon
@@ -61,7 +61,7 @@ class ImplantTaskQueue(dict):
             self[implant_uuid].remove(task)
         if len(self[implant_uuid]) < 1:
             del self[implant_uuid]
-        #api.remove_task(implant_uuid, task['id'])
+        api.remove_task(implant_uuid, task['id'])
 
     def get_next_task(self, implant_uuid):
         print "check for tasks: %s" % implant_uuid
@@ -124,7 +124,6 @@ class LP(Daemon):
                         return
 
                     self._log("Received beacon: %s" % beacon)
-                    self._log("Received beacon.type: %s" % beacon.type)
 
                     # Process any queued tasking for this implant
                     task = self.task_queue.get_next_task(beacon.uuid)
@@ -147,7 +146,7 @@ class LP(Daemon):
         response_factory = get_response_by_name(response_data_type)()
         response = response_factory.create_response(pkt)
         response_factory.add_response_data(
-            response, task, response_data_mapping)
+            response, task, response_data_mapping, format=MESSAGE_FORMATS['xor'])
         # Send the response packet
         send(response)
 
@@ -193,8 +192,12 @@ class LP(Daemon):
 
                 offset = 0
                 for beacon_field in beacon_fields:
+                    format = MESSAGE_FORMATS['plain']
                     data_size = get_byte_size(
                         message_test_data[beacon_field])
+                    if 'format' in beacon.keys():
+                        format = beacon.format
+
                     if beacon_field == 'data':
                         try:
                             data_size = beacon.data_length
@@ -202,14 +205,23 @@ class LP(Daemon):
                             # Normal if Beacon doesn't contain data
                             data_size = 0
                     if beacon_field == 'data_length' and not (
-                            beacon.type == BEACON_TYPES['data']):
+                            (beacon.type & 0xf) == BEACON_TYPES['data']):
+                        print "XXXXXXXXXX Not a data type beacon"
+                        print "beacon.type & 0xf: ", hex(beacon.type & 0xf)
                         beacon['%s' % beacon_field] = 0
                         continue
+
+                    # decode all data except type
+                    if beacon_field != type:
+                        value = decode(packet_field_value[offset:offset+data_size], format)
+                    else:
+                        value = packet_field_value[offset:offset+data_size]
+
                     try:
-                        beacon['%s' % beacon_field] = packet_field_value[
-                            offset:offset+data_size]
-                        self._log("beacon[%s] => %s" % (beacon_field, packet_field_value[
-                            offset:offset+data_size].encode('hex')))
+                        #beacon['%s' % beacon_field] = packet_field_value[
+                        #    offset:offset+data_size]
+                        beacon['%s' % beacon_field] = value
+                        self._log("beacon[%s] => %s" % (beacon_field, packet_field_value[offset:offset+data_size].encode('hex')))
                     except MalformedBeacon, e:
                         print "Malformed Beacon: ", e
                         break
@@ -258,7 +270,8 @@ class LP(Daemon):
         """Private logger for messages"""
         if self.verbose:
             sys.stderr.write("%s\n" % str(msg))
-            api.send_log(msg, msg_type)
+            # TODO: uncomment
+            #api.send_log(msg, msg_type)
 
     def _start_sniff(self):
         """Start listening for incoming packets"""

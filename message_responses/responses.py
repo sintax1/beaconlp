@@ -1,6 +1,7 @@
 from scapy.all import *  # noqa
 import struct
 import json
+from messages import (MESSAGE_FORMATS, encode)
 
 def get_all_response_types():
     response_types = [r.response_name for r in BaseResponse.__subclasses__()]
@@ -25,7 +26,8 @@ class BaseResponse(object):
     def create_response(self, req):
         return req
 
-    def add_response_data(self, reply, data, data_mapping):
+    def add_response_data(
+            self, reply, data, data_mapping, format=MESSAGE_FORMATS['plain']):
         """
         data = {
             'type': 0x0,
@@ -38,7 +40,6 @@ class BaseResponse(object):
             'Raw.load': 'data'
         }
         """
-
 
         data_map = {}
         for packet_field, response_field in data_mapping:
@@ -53,20 +54,24 @@ class BaseResponse(object):
             buff = ""
             for response_field in response_fields:
                 if response_field == 'type':
-                    buff += struct.pack('!B', data['type'])
+                    msg_type = ((format << 4) & 0xf0) | (data['type'] & 0x0f)
+                    buff += struct.pack('!B', msg_type)
                 elif response_field == 'data_length':
-                    buff += struct.pack('!H', data['data_length'])
+                    buff += encode(
+                        struct.pack('!H', data['data_length']), format)
                 elif response_field == 'data' and data['data']:
-                    buff += struct.pack(
-                        '!%ss' % data['data_length'], str(data['data']))
+                    buff += encode(
+                        struct.pack(
+                            '!%ss' % data['data_length'], str(data['data'])),
+                        format)
 
             layer_type = eval(packet_layer)
             layer = reply.getlayer(layer_type)
-            print "layer type: %s" % type(layer)
+            #print "layer type: %s" % type(layer)
             layer.setfieldval(packet_field, buff)
 
-        print "Reply Packet:"
-        print reply.show()
+        #print "Reply Packet:"
+        #print reply.show()
 
     def print_response(self, req):
         response = self.create_response(req.copy())
@@ -105,8 +110,8 @@ class DNSTXTResponse(BaseResponse):
         
         dns = req.getlayer(DNS)
         dns_resp = DNS(id=dns.id, ancount=1, qd=dns.qd)
-        print "Request Packet:"
-        print req.show()
+        #print "Request Packet:"
+        #print req.show()
         dns_resp.an = DNSRR(rrname=dns.qd.qname,type="TXT",rdata="test")
         reply = IP(dst=ip.src)/UDP(dport=udp.sport, sport=53)/dns_resp
         return reply

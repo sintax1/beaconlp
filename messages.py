@@ -68,9 +68,6 @@ message_test_data = {
 }
 
 
-def xor(data, b = 0x33):
-    return ''.join([c ^ b for c in data])
-
 def json_to_beacon(beacon_json):
     return json.loads(beacon_json)
 
@@ -111,6 +108,30 @@ def get_task_by_type(task_type):
         if task_data['type'] == task_type:
             return task_data
     return None
+
+
+def decode(data, format = 0x0):
+    if format == MESSAGE_FORMATS['xor']:
+        ret_data = xor(data)
+        return ret_data
+    return data
+
+
+def encode(data, format = 0x0):
+    if format == MESSAGE_FORMATS['xor']:
+        ret_data = xor(data)
+        return ret_data
+    return data
+
+
+def xor(data, b = 0x33):
+    if isinstance(data, int):
+        print "data: ", hex(data)
+        encoded = format(data, 'x')
+        length = len(encoded)
+        encoded = encoded.zfill(length+length%2)
+        data = encoded.decode('hex')
+    return ''.join([chr(ord(c) ^ b) for c in data])
 
 
 class Message(object):
