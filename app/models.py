@@ -18,13 +18,12 @@ sys.path.append('/root')
 
 from utils import generate_uuid
 
-"""
 TASK_TYPES = (
     ('0', 'CLI Command'),
     ('1', 'Python Commands'),
     ('2', 'Binary Upload & Execute'),
 )
-"""
+
 assoc_tasks_implant = Table(
     'tasks_implant', Model.metadata,
     Column('id', Integer, primary_key=True),
