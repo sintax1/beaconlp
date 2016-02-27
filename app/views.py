@@ -29,9 +29,6 @@ from validators import BeaconDataMappingCheck
 import json
 
 
-print TASK_TYPES
-
-
 def get_assigned_tasks():
     return db.session.query(Task)
 
@@ -166,6 +163,15 @@ class LogModelView(ModelView):
         http_return_code = 200
         response = make_response('Success', http_return_code)
         return response
+
+    @action("muldelete", "Delete", "Delete all Really?", "fa-trash")
+    def muldelete(self, items):
+        if isinstance(items, list):
+            self.datamodel.delete_all(items)
+            self.update_redirect()
+        else:
+            self.datamodel.delete(items)
+        return redirect(self.get_redirect())
 
 
 class BeaconModelView(ModelView):
