@@ -11,7 +11,7 @@
 
 #include "messagetypes.h"
 #include "base64.c"
-#define UUID 0xffff
+#define UUID 0x0001
 #define XOR_CHAR 0x33
  
 char dns_servers[10][100];
