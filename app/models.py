@@ -100,6 +100,8 @@ class Task(Model):
 
     @renders('type')
     def task_type(self):
+        if self.type not in TASK_TYPES.keys():
+            return ''
         return Markup(TASK_TYPES[self.type][1])
 
     def __repr__(self):

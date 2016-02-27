@@ -12,13 +12,14 @@ from wtforms import (
 from flask_appbuilder.fieldwidgets import (
     Select2Widget, Select2ManyWidget)
 from .models import (
-    Implant, Task, TASK_TYPES, Log, DataStore, Beacon)
+    #Implant, Task, TASK_TYPES, Log, DataStore, Beacon)
+    Implant, Task, Log, DataStore, Beacon)
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from filters import (
     get_querybuilder_filters_json, get_all_packet_fields)
 from messages import (
     get_all_beacon_fields_json, get_all_beacon_fields,
-    json_to_beacon, get_all_task_fields)
+    json_to_beacon, get_all_task_fields, TASK_TYPES)
 from message_responses.responses import get_all_response_types
 from flask_appbuilder.security.decorators import has_access_api
 
