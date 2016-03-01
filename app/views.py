@@ -177,7 +177,8 @@ class LogModelView(ModelView):
 class BeaconModelView(ModelView):
     datamodel = SQLAInterface(Beacon)
     base_permissions = [
-        'can_list', 'can_show', 'can_add', 'can_edit', 'can_post_beacon']
+        'can_list', 'can_show', 'can_add', 'can_edit',
+        'can_delete', 'can_post_beacon']
 
     edit_form_extra_fields = {
         'beacon_filter': Field(
@@ -263,6 +264,15 @@ class BeaconModelView(ModelView):
     description_columns = {
         'name': 'Simple name for easy reference'
     }
+
+    @action("muldelete", "Delete", "Delete all Really?", "fa-trash")
+    def muldelete(self, items):
+        if isinstance(items, list):
+            self.datamodel.delete_all(items)
+            self.update_redirect()
+        else:
+            self.datamodel.delete(items)
+        return redirect(self.get_redirect())
 
     @expose_api(name='post_beacon', url='/api/postbeacon', methods=['POST'])
     @has_access_api
