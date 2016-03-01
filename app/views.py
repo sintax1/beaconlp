@@ -80,7 +80,7 @@ class ImplantModelView(ModelView):
 
     label_columns = {'task': 'Task'}
     list_columns = [
-        'uuid', 'name', 'external_ip_address', 'internal_ip_address',
+        'uuid_w_hex', 'name', 'external_ip_address', 'internal_ip_address',
         'tasks_assigned', 'last_beacon_received', 'active', 'all_tasks']
 
     show_fieldsets = [

@@ -71,6 +71,10 @@ class Implant(Model):
         'DataStore', secondary=assoc_datastore_implant,
         backref='implant')
 
+    @renders('uuid')
+    def uuid_w_hex(self):
+        return Markup("%s [%s]" % (self.uuid, hex(int(self.uuid))))
+
     def tasks_assigned(self):
         if self.tasks:
             return True
